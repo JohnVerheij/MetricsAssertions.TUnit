@@ -22,7 +22,7 @@ The framework-agnostic core (`MetricsAssertions`) ships `InstrumentCapture.Of<T>
 dotnet add package MetricsAssertions.TUnit
 ```
 
-**Requirements:** TUnit 1.48.6 or later, .NET 10. The framework-agnostic `MetricsAssertions` core comes transitively.
+**Requirements:** TUnit 1.50.0 or later, .NET 10. The framework-agnostic `MetricsAssertions` core comes transitively.
 
 ## Quick start
 
