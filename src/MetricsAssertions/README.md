@@ -10,11 +10,10 @@ Framework-agnostic core for fluent metric-measurement assertions over `System.Di
 
 ## What ships
 
-- `InstrumentCapture.Of<T>(Instrument<T>, TimeProvider?)` captures the measurements a referenceable instrument records, via `MetricCollector<T>`.
-- `InstrumentCapture.Measurements` (projected snapshot) and `Count`.
+- `InstrumentCapture` captures a referenceable, observable, or by-name instrument (`Of` / `OfObservable` / `OfName`) via `MetricCollector<T>`, with totals, last value, tag queries, baseline deltas (`Snapshot` / `Since`), and `WaitForAsync`.
+- `MeasurementSet`: an immutable, queryable set of measurements with counter and histogram aggregates, sample comparisons, tag and instrument narrowing, and a deterministic snapshot projection.
+- `MeterCapture` (meter-wide capture across instruments) and `MeterInspector` (instrument discovery).
 - `CapturedMeasurement` (instrument name, value projected to `double`, tags, timestamp).
-
-Meter-wide capture, observable and by-name capture, totals, and tag and delta queries land in 0.1.0.
 
 ## Install
 

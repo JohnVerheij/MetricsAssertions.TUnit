@@ -16,9 +16,74 @@ namespace MetricsAssertions
     {
         public int Count { get; }
         public string InstrumentName { get; }
-        public System.Collections.Generic.IReadOnlyList<MetricsAssertions.CapturedMeasurement> Measurements { get; }
+        public double? LastValue { get; }
+        public MetricsAssertions.MeasurementSet Measurements { get; }
+        public long Total { get; }
         public void Dispose() { }
+        public bool HasMeasurementTagged(string key, object? value) { }
+        public void RecordObservable() { }
+        public MetricsAssertions.MeasurementSet Since(MetricsAssertions.MeasurementBaseline baseline) { }
+        public MetricsAssertions.MeasurementBaseline Snapshot() { }
+        public MetricsAssertions.MeasurementSet Tagged(string key, object? value) { }
+        public System.Threading.Tasks.Task WaitForAsync(int count, System.Threading.CancellationToken cancellationToken = default) { }
         public static MetricsAssertions.InstrumentCapture Of<T>(System.Diagnostics.Metrics.Instrument<T> instrument, System.TimeProvider? timeProvider = null)
             where T :  struct { }
+        public static MetricsAssertions.InstrumentCapture OfName<T>(string meterName, string instrumentName, System.TimeProvider? timeProvider = null)
+            where T :  struct { }
+        public static MetricsAssertions.InstrumentCapture OfObservable<T>(System.Diagnostics.Metrics.ObservableInstrument<T> instrument, System.TimeProvider? timeProvider = null)
+            where T :  struct { }
+    }
+    public readonly struct MeasurementBaseline : System.IEquatable<MetricsAssertions.MeasurementBaseline>
+    {
+        public MeasurementBaseline(int Count) { }
+        public int Count { get; init; }
+    }
+    public sealed class MeasurementSet
+    {
+        public MeasurementSet(System.Collections.Generic.IEnumerable<MetricsAssertions.CapturedMeasurement> measurements) { }
+        public System.Collections.Generic.IReadOnlyList<MetricsAssertions.CapturedMeasurement> All { get; }
+        public double Average { get; }
+        public int Count { get; }
+        public bool IsEmpty { get; }
+        public double? LastValue { get; }
+        public double Max { get; }
+        public double Min { get; }
+        public double Sum { get; }
+        public long Total { get; }
+        public System.Collections.Generic.IReadOnlyList<double> Values { get; }
+        public static MetricsAssertions.MeasurementSet Empty { get; }
+        public bool AllValuesInRange(double min, double max) { }
+        public bool EveryMeasurementCarriesTag(string key) { }
+        public MetricsAssertions.MeasurementSet ForInstrument(string instrumentName) { }
+        public bool SamplesEqual(params double[] expected) { }
+        public bool SamplesEquivalentTo(params double[] expected) { }
+        public MetricsAssertions.MeasurementSet Tagged([System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Key",
+                "Value"})] params System.ValueTuple<string, object?>[] tags) { }
+        public MetricsAssertions.MeasurementSet Tagged(string key, object? value) { }
+        public string ToSnapshotString() { }
+    }
+    public sealed class MeterCapture : System.IDisposable
+    {
+        public MetricsAssertions.InstrumentCapture this[string instrumentName] { get; }
+        public MetricsAssertions.MeasurementSet Measurements { get; }
+        public string MeterName { get; }
+        public MetricsAssertions.MeterCapture Add<T>(System.Diagnostics.Metrics.Instrument<T> instrument, System.TimeProvider? timeProvider = null)
+            where T :  struct { }
+        public MetricsAssertions.MeterCapture Add<T>(string instrumentName, System.TimeProvider? timeProvider = null)
+            where T :  struct { }
+        public long CounterTotal(string instrumentName) { }
+        public void Dispose() { }
+        public bool HasMeasurementTagged(string instrumentName, string tagKey, object? tagValue) { }
+        public int MeasurementCount(string instrumentName) { }
+        public void RecordObservable() { }
+        public System.Collections.Generic.IReadOnlyList<double> Samples(string instrumentName) { }
+        public static MetricsAssertions.MeterCapture For(string meterName) { }
+    }
+    public static class MeterInspector
+    {
+        public static bool IsPublished(string meterName, string instrumentName) { }
+        public static System.Collections.Generic.IReadOnlySet<string> PublishedInstrumentNames(string meterName) { }
+        public static bool PublishesAll(string meterName, params string[] instrumentNames) { }
     }
 }

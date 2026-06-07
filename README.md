@@ -38,12 +38,10 @@ TUnit-native assertions over `System.Diagnostics.Metrics` instruments for .NET t
 
 `MetricsAssertions.TUnit` absorbs that boilerplate into a reusable capture type and a fluent assertion surface:
 
-- A disposable, per-test `InstrumentCapture` that wraps `MetricCollector<T>` over an instrument and projects its measurements to a uniform `CapturedMeasurement` shape.
-- TUnit `Assert.That(capture).HasMeasurementCount(...)` assertions, source-generated via `[GenerateAssertion]`.
+- A disposable, per-test `InstrumentCapture` that wraps `MetricCollector<T>` over an instrument and projects its measurements to a uniform `CapturedMeasurement` shape, exposed as a queryable `MeasurementSet`.
+- A full TUnit `Assert.That(...).Has*` vocabulary over captures, measurement sets, and multi-instrument `MeterCapture` bundles, source-generated via `[GenerateAssertion]`.
 
-The framework-agnostic `MetricsAssertions` core ships separately so non-TUnit consumers can reuse the capture.
-
-**Foundation release (v0.0.1):** ships the capture primitive and a first assertion; the full surface (meter-wide capture, observable and by-name capture, counter totals, tag and delta queries, and more assertions) lands in 0.1.0. See [Roadmap](#roadmap).
+The framework-agnostic `MetricsAssertions` core ships separately so non-TUnit consumers can reuse the capture and query surface.
 
 ## Install
 
@@ -61,8 +59,8 @@ dotnet add package MetricsAssertions
 
 | Package | Purpose | Depends on |
 |---|---|---|
-| [`MetricsAssertions`](https://www.nuget.org/packages/MetricsAssertions/) | Framework-agnostic core: the `InstrumentCapture` collector-backed capture type and the `CapturedMeasurement` record | `Microsoft.Extensions.Diagnostics.Testing` |
-| [`MetricsAssertions.TUnit`](https://www.nuget.org/packages/MetricsAssertions.TUnit/) | TUnit adapter: fluent `Assert.That(capture)` assertions (`HasMeasurementCount`) | `MetricsAssertions` + `TUnit.Assertions` + `TUnit.Core` |
+| [`MetricsAssertions`](https://www.nuget.org/packages/MetricsAssertions/) | Framework-agnostic core: the `InstrumentCapture` / `MeterCapture` capture types, the queryable `MeasurementSet`, `MeterInspector`, and the `CapturedMeasurement` record | `Microsoft.Extensions.Diagnostics.Testing` |
+| [`MetricsAssertions.TUnit`](https://www.nuget.org/packages/MetricsAssertions.TUnit/) | TUnit adapter: fluent `Assert.That(...)` assertions over captures, measurement sets, and meter bundles | `MetricsAssertions` + `TUnit.Assertions` + `TUnit.Core` |
 
 Install `MetricsAssertions.TUnit` for TUnit test projects; `MetricsAssertions` comes transitively. Adapters for other test frameworks (NUnit, xUnit, MSTest) are not shipped; they would reuse the `MetricsAssertions` core. Open a feature request if you need one.
 
@@ -70,8 +68,8 @@ Install `MetricsAssertions.TUnit` for TUnit test projects; `MetricsAssertions` c
 
 | Type / member | Namespace | Auto-imported? |
 |---|---|---|
-| Fluent entry points (`HasMeasurementCount`) | `TUnit.Assertions.Extensions` | Yes (TUnit auto-imports) |
-| Core types (`InstrumentCapture`, `CapturedMeasurement`) | `MetricsAssertions` | No - needs `using MetricsAssertions;` |
+| Fluent entry points (`HasCounterTotal`, `HasMeasurementCount`, ...) | `TUnit.Assertions.Extensions` | Yes (TUnit auto-imports) |
+| Core types (`InstrumentCapture`, `MeasurementSet`, `MeterCapture`, `MeterInspector`, `CapturedMeasurement`) | `MetricsAssertions` | No - needs `using MetricsAssertions;` |
 
 A `GlobalUsings.cs` in your test project:
 
@@ -103,19 +101,50 @@ await Assert.That(capture).HasMeasurementCount(2);
 
 ## Entry points
 
-Capture-level assertion on `Assert.That(capture)` where `capture` is an `InstrumentCapture`:
+Assertions on `Assert.That(capture)` where `capture` is an `InstrumentCapture`:
 
 | Assertion | Description |
 |---|---|
-| `HasMeasurementCount(n)` | The capture recorded exactly `n` measurements (names the expected and observed counts on failure). |
+| `HasCounterTotal(n)` | The net total of the captured values equals `n`. |
+| `HasCounterTotalAtLeast(n)` | The net total is at least `n`. |
+| `HasUpDownCounterValue(n)` | The net up-down-counter value equals `n`. |
+| `HasMeasurementCount(n)` | Exactly `n` measurements were captured. |
+| `HasNoMeasurements()` | No measurements were captured. |
+| `HasLastValue(v)` | The most recently captured value equals `v`. |
+| `HasTaggedMeasurement(key, value)` | At least one measurement carries the tag `key = value`. |
 
-The `MetricsAssertions` core exposes the capture surface for reading measurements without an assertion:
+Assertions on `Assert.That(set)` where `set` is a `MeasurementSet` (e.g. `capture.Measurements`, `capture.Tagged(...)`, `capture.Since(...)`):
+
+| Assertion | Description |
+|---|---|
+| `HasCounterTotal(n)` / `HasCounterTotalAtLeast(n)` | The net total equals / is at least `n`. |
+| `HasMeasurementCount(n)` / `HasNoMeasurements()` | The set holds exactly `n` measurements / is empty. |
+| `HasSampleSum(v, tolerance?)` / `HasSampleAverage(v, tolerance?)` | The histogram sample sum / mean equals `v` within an optional tolerance. |
+| `HasAllSamplesInRange(min, max)` | Every sample lies within the inclusive range. |
+| `HasSamples(...)` / `HasSamplesInAnyOrder(...)` | The samples equal the expected values, in order / in any order. |
+| `HasEveryMeasurementTagged(key)` | Every measurement carries a tag with the given key. |
+| `HasTaggedMeasurement(key, value)` | At least one measurement carries the tag `key = value`. |
+
+Assertions on `Assert.That(meter)` where `meter` is a multi-instrument `MeterCapture`, addressing one bundled instrument by name:
+
+| Assertion | Description |
+|---|---|
+| `HasCounterTotal(name, n)` / `HasUpDownCounterValue(name, n)` | The named counter's net total / value equals `n`. |
+| `HasMeasurementCount(name, n)` | The named instrument captured exactly `n` measurements. |
+| `HasTaggedMeasurement(name, key, value)` | The named instrument has a measurement tagged `key = value`. |
+
+The `MetricsAssertions` core exposes the capture and query surface for reading measurements without an assertion:
 
 | Member | Description |
 |---|---|
-| `InstrumentCapture.Of<T>(instrument, timeProvider?)` | Captures a referenceable `Instrument<T>` via `MetricCollector<T>`. |
-| `InstrumentCapture.Measurements` | A snapshot of the captured measurements, each a `CapturedMeasurement`. |
-| `InstrumentCapture.Count` | How many measurements were captured. |
+| `InstrumentCapture.Of<T>` / `OfObservable<T>` / `OfName<T>` | Captures a referenceable, observable, or by-name instrument via `MetricCollector<T>`. |
+| `InstrumentCapture.Measurements` | The captured measurements as a queryable `MeasurementSet`. |
+| `InstrumentCapture.Total` / `Count` / `LastValue` / `Tagged` / `HasMeasurementTagged` | Convenience reads over the capture. |
+| `InstrumentCapture.Snapshot` / `Since` | Take a `MeasurementBaseline` and query only the measurements recorded after it (an action's delta). |
+| `InstrumentCapture.RecordObservable` / `WaitForAsync` | Pull observable-gauge values; await a measurement count. |
+| `MeasurementSet` | An immutable, queryable set: `Total`/`Sum`/`Min`/`Max`/`Average`/`Values`, `Tagged`/`ForInstrument`, sample comparisons, and `ToSnapshotString`. |
+| `MeterCapture.For` + `Add` | Build a meter-wide bundle and query per instrument or across all via `Measurements`. |
+| `MeterInspector` | Discover a meter's published instruments (`PublishedInstrumentNames` / `IsPublished` / `PublishesAll`). |
 | `CapturedMeasurement` | A captured measurement: instrument name, value projected to `double`, tags, and timestamp. |
 
 ## Failure diagnostics
@@ -155,11 +184,9 @@ The 1.0 milestone signals API stability.
 
 ## Roadmap
 
-Shipped in **0.0.1** (foundation): `InstrumentCapture.Of<T>` capture, the `Measurements` snapshot and `Count`, the `CapturedMeasurement` record, and the `HasMeasurementCount` assertion.
+Shipped in **0.1.0** (full surface): the queryable `MeasurementSet`, multi-instrument `MeterCapture`, meter-introspection `MeterInspector`, `OfObservable` / `OfName` and baseline-delta capture, `WaitForAsync`, and the full `Assert.That` assertion vocabulary across captures, sets, and meters.
 
-Planned for **0.1.0**: `MeterCapture` (meter-wide capture across instruments), `OfObservable` / `OfName` capture, counter and up-down-counter totals, tag-value and captured-after-baseline delta queries, async `WaitForAsync`, and the broader fluent assertions.
-
-Demand-driven; no fixed timeline.
+Further assertions and capture conveniences are demand-driven; open a feature request or [Discussion](https://github.com/JohnVerheij/MetricsAssertions.TUnit/discussions) if you hit a gap. No fixed timeline.
 
 ## Family compatibility
 
