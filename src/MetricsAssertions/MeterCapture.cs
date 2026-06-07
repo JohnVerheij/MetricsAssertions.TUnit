@@ -43,7 +43,8 @@ public sealed class MeterCapture : IDisposable
     /// <param name="timeProvider">An optional clock for measurement timestamps and waits.</param>
     public MeterCapture Add<T>(string instrumentName, TimeProvider? timeProvider = null) where T : struct
     {
-        _instruments[instrumentName] = InstrumentCapture.OfName<T>(MeterName, instrumentName, timeProvider);
+        ArgumentNullException.ThrowIfNull(instrumentName);
+        Replace(instrumentName, InstrumentCapture.OfName<T>(MeterName, instrumentName, timeProvider));
         return this;
     }
 
@@ -54,13 +55,25 @@ public sealed class MeterCapture : IDisposable
     public MeterCapture Add<T>(Instrument<T> instrument, TimeProvider? timeProvider = null) where T : struct
     {
         ArgumentNullException.ThrowIfNull(instrument);
-        _instruments[instrument.Name] = InstrumentCapture.Of(instrument, timeProvider);
+        if (!string.Equals(instrument.Meter.Name, MeterName, StringComparison.Ordinal))
+            throw new ArgumentException(
+                $"Instrument '{instrument.Name}' belongs to meter '{instrument.Meter.Name}', not '{MeterName}'.",
+                nameof(instrument));
+        Replace(instrument.Name, InstrumentCapture.Of(instrument, timeProvider));
         return this;
     }
 
     /// <summary>Gets the per-instrument capture for <paramref name="instrumentName"/>.</summary>
     /// <param name="instrumentName">The instrument name added to the bundle.</param>
     public InstrumentCapture this[string instrumentName] => _instruments[instrumentName];
+
+    /// <summary>Returns whether an instrument named <paramref name="instrumentName"/> is bundled.</summary>
+    /// <param name="instrumentName">The instrument name to look for.</param>
+    public bool Contains(string instrumentName)
+    {
+        ArgumentNullException.ThrowIfNull(instrumentName);
+        return _instruments.ContainsKey(instrumentName);
+    }
 
     /// <summary>Gets every captured measurement across all bundled instruments as a queryable, assertable set.</summary>
     public MeasurementSet Measurements => new(_instruments.Values.SelectMany(i => i.Measurements.All));
@@ -90,6 +103,14 @@ public sealed class MeterCapture : IDisposable
     /// <param name="tagValue">The tag value to match.</param>
     public bool HasMeasurementTagged(string instrumentName, string tagKey, object? tagValue)
         => _instruments[instrumentName].HasMeasurementTagged(tagKey, tagValue);
+
+    /// <summary>Adds a capture under <paramref name="instrumentName"/>, disposing any capture it replaces.</summary>
+    private void Replace(string instrumentName, InstrumentCapture capture)
+    {
+        if (_instruments.TryGetValue(instrumentName, out InstrumentCapture? existing))
+            existing.Dispose();
+        _instruments[instrumentName] = capture;
+    }
 
     /// <summary>Releases every bundled collector.</summary>
     public void Dispose()

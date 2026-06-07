@@ -120,4 +120,16 @@ internal sealed class InstrumentCaptureTests
         ct.ThrowIfCancellationRequested();
         await Assert.That(() => InstrumentCapture.Of<long>(null!)).Throws<ArgumentNullException>();
     }
+
+    [Test]
+    public async Task Since_WithForeignBaseline_Throws(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter("MetricsAssertions.Tests.Foreign");
+        var counter = meter.CreateCounter<long>("requests");
+        using var captureA = InstrumentCapture.Of(counter);
+        using var captureB = InstrumentCapture.Of(counter);
+        MeasurementBaseline baseline = captureA.Snapshot();
+        await Assert.That(() => captureB.Since(baseline)).Throws<ArgumentException>();
+    }
 }

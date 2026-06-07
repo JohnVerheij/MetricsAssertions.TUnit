@@ -74,4 +74,36 @@ internal sealed class MeterCaptureTests
         using var capture = MeterCapture.For("MetricsAssertions.Tests.MeterNull");
         await Assert.That(() => capture.Add((Instrument<long>)null!)).Throws<ArgumentNullException>();
     }
+
+    [Test]
+    public async Task Add_DuplicateName_ReplacesAndDisposesPrior(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter("MetricsAssertions.Tests.Dup");
+        var counter = meter.CreateCounter<long>("requests");
+        using var capture = MeterCapture.For("MetricsAssertions.Tests.Dup")
+            .Add<long>("requests")
+            .Add<long>("requests");
+        counter.Add(1);
+        await Assert.That(capture.MeasurementCount("requests")).IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task Contains_TrueForBundled_FalseOtherwise(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var capture = MeterCapture.For("MetricsAssertions.Tests.Has").Add<long>("x");
+        await Assert.That(capture.Contains("x")).IsTrue();
+        await Assert.That(capture.Contains("y")).IsFalse();
+    }
+
+    [Test]
+    public async Task AddInstrument_FromDifferentMeter_Throws(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var other = new Meter("MetricsAssertions.Tests.OtherMeter");
+        var foreign = other.CreateCounter<long>("foreign");
+        using var capture = MeterCapture.For("MetricsAssertions.Tests.HostMeter");
+        await Assert.That(() => capture.Add(foreign)).Throws<ArgumentException>();
+    }
 }

@@ -149,11 +149,13 @@ The `MetricsAssertions` core exposes the capture and query surface for reading m
 
 ## Failure diagnostics
 
-`HasMeasurementCount` names both the expected and observed count on failure:
+Every assertion dumps the captured measurements (instrument, value, tags, timestamp) under the failure, so a mismatch shows what was actually recorded rather than only the mismatched scalar:
 
 ```
 Expected the capture to have captured 2 measurement(s)
   but it had 1
+  captured:
+    orders.placed = 3 {route=/orders} @ 2026-06-07T10:15:00.0000000+00:00
 ```
 
 Every assertion also accepts `.Because(reason)` to attach a domain explanation to the failure, the same as any other TUnit assertion (it is inherited from the base assertion type):
@@ -171,6 +173,10 @@ Capture is built on the first-party `MetricCollector<T>` from `Microsoft.Extensi
 ### Why per-test capture, disposed via `using`
 
 `InstrumentCapture` is a `using`-scoped handle that attaches its collector on creation and releases it on `Dispose`, with a fresh measurement stream per instance. This keeps capture isolated per test (no process-wide collector leaking measurements across parallel or sequential tests) and bounds the collector's lifetime to the test that needs it.
+
+### Values are projected to `double`
+
+Every measurement's value is projected to `double` (via `Convert.ToDouble`) so heterogeneous instrument types share one query and assertion surface. `double` represents integers exactly only up to 2^53 and cannot represent every decimal exactly, so an exact-equality assertion on a very large `long` counter, or on a `decimal` (for example money-as-metric) histogram, can surprise. For counts and durations this is a non-issue; for non-integer values, prefer the tolerance-based `HasSampleSum` / `HasSampleAverage` assertions, which take an explicit tolerance.
 
 ## Stability intent (pre-1.0)
 

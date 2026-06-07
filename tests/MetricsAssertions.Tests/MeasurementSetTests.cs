@@ -26,7 +26,7 @@ internal sealed class MeasurementSetTests
     {
         meter = new Meter("MetricsAssertions.Tests.Set");
         var histogram = meter.CreateHistogram<int>("latency");
-        var capture = InstrumentCapture.Of(histogram);
+        using var capture = InstrumentCapture.Of(histogram);
         histogram.Record(10);
         histogram.Record(20);
         histogram.Record(30);
@@ -112,5 +112,17 @@ internal sealed class MeasurementSetTests
     {
         ct.ThrowIfCancellationRequested();
         await Assert.That(() => new MeasurementSet(null!)).Throws<ArgumentNullException>();
+    }
+
+    [Test]
+    public async Task Describe_RendersMeasurementsAndEmptyPlaceholder(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        await Assert.That(MeasurementSet.Empty.Describe()).Contains("no measurements");
+
+        var set = new MeasurementSet(new[] { M("a", 1), M("b", 2, ("k", "v")) });
+        string text = set.Describe();
+        await Assert.That(text).Contains("a = 1");
+        await Assert.That(text).Contains("b = 2 {k=v}");
     }
 }

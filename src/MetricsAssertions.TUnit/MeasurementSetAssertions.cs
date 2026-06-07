@@ -22,6 +22,12 @@ public static class MeasurementSetAssertions
 
     private static string Num(double value) => value.ToString(CultureInfo.InvariantCulture);
 
+    private static void ValidateTolerance(double tolerance)
+    {
+        if (!double.IsFinite(tolerance) || tolerance < 0)
+            throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, "Tolerance must be a finite, non-negative number.");
+    }
+
     /// <summary>Asserts the net total of the values equals <paramref name="expected"/>.</summary>
     /// <param name="value">The measurement set.</param>
     /// <param name="expected">The expected net total.</param>
@@ -33,7 +39,7 @@ public static class MeasurementSetAssertions
         ArgumentNullException.ThrowIfNull(value);
         return value.Total == expected
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value, string.Concat(
                 "the set to have a total of ", expected.ToString(CultureInfo.InvariantCulture),
                 "\n  but it was ", value.Total.ToString(CultureInfo.InvariantCulture)));
     }
@@ -49,7 +55,7 @@ public static class MeasurementSetAssertions
         ArgumentNullException.ThrowIfNull(value);
         return value.Total >= expected
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value, string.Concat(
                 "the set to have a total of at least ", expected.ToString(CultureInfo.InvariantCulture),
                 "\n  but it was ", value.Total.ToString(CultureInfo.InvariantCulture)));
     }
@@ -65,7 +71,7 @@ public static class MeasurementSetAssertions
         ArgumentNullException.ThrowIfNull(value);
         return value.Count == expected
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value, string.Concat(
                 "the set to have ", expected.ToString(CultureInfo.InvariantCulture),
                 " measurement(s)\n  but it had ", value.Count.ToString(CultureInfo.InvariantCulture)));
     }
@@ -80,7 +86,7 @@ public static class MeasurementSetAssertions
         ArgumentNullException.ThrowIfNull(value);
         return value.IsEmpty
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value, string.Concat(
                 "the set to be empty\n  but it had ",
                 value.Count.ToString(CultureInfo.InvariantCulture), " measurement(s)"));
     }
@@ -96,9 +102,10 @@ public static class MeasurementSetAssertions
     public static AssertionResult HasSampleSum(this MeasurementSet value, double expected, double tolerance = 0d)
     {
         ArgumentNullException.ThrowIfNull(value);
+        ValidateTolerance(tolerance);
         return Math.Abs(value.Sum - expected) <= tolerance
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value, string.Concat(
                 "the set to have a sample sum of ", Num(expected), "\n  but it was ", Num(value.Sum)));
     }
 
@@ -113,9 +120,10 @@ public static class MeasurementSetAssertions
     public static AssertionResult HasSampleAverage(this MeasurementSet value, double expected, double tolerance = 0d)
     {
         ArgumentNullException.ThrowIfNull(value);
+        ValidateTolerance(tolerance);
         return Math.Abs(value.Average - expected) <= tolerance
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value, string.Concat(
                 "the set to have a sample average of ", Num(expected), "\n  but it was ", Num(value.Average)));
     }
 
@@ -130,9 +138,10 @@ public static class MeasurementSetAssertions
     public static AssertionResult HasAllSamplesInRange(this MeasurementSet value, double min, double max)
     {
         ArgumentNullException.ThrowIfNull(value);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(min, max);
         return value.AllValuesInRange(min, max)
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value, string.Concat(
                 "the set to have all samples within [", Num(min), ", ", Num(max),
                 "]\n  but it was [", Fmt(value.Values), "]"));
     }
@@ -150,7 +159,7 @@ public static class MeasurementSetAssertions
         ArgumentNullException.ThrowIfNull(expected);
         return value.SamplesEqual(expected)
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value, string.Concat(
                 "the set to have samples [", Fmt(expected), "] in order\n  but it had [", Fmt(value.Values), "]"));
     }
 
@@ -167,7 +176,7 @@ public static class MeasurementSetAssertions
         ArgumentNullException.ThrowIfNull(expected);
         return value.SamplesEquivalentTo(expected)
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value, string.Concat(
                 "the set to have samples [", Fmt(expected), "] in any order\n  but it had [", Fmt(value.Values), "]"));
     }
 
@@ -184,7 +193,7 @@ public static class MeasurementSetAssertions
         ArgumentNullException.ThrowIfNull(tagKey);
         return value.EveryMeasurementCarriesTag(tagKey)
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value, string.Concat(
                 "the set to have every measurement tagged with ", tagKey, "\n  but not all were"));
     }
 
@@ -203,7 +212,7 @@ public static class MeasurementSetAssertions
         ArgumentNullException.ThrowIfNull(tagKey);
         return value.Tagged(tagKey, tagValue).Count > 0
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value, string.Concat(
                 "the set to have a measurement tagged ", tagKey, "=",
                 Convert.ToString(tagValue, CultureInfo.InvariantCulture), "\n  but none matched"));
     }

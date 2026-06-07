@@ -24,7 +24,7 @@ public static class InstrumentCaptureAssertions
         ArgumentNullException.ThrowIfNull(value);
         return value.Total == expected
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
                 "the capture to have counter total ", expected.ToString(CultureInfo.InvariantCulture),
                 "\n  but it was ", value.Total.ToString(CultureInfo.InvariantCulture)));
     }
@@ -40,7 +40,7 @@ public static class InstrumentCaptureAssertions
         ArgumentNullException.ThrowIfNull(value);
         return value.Total >= expected
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
                 "the capture to have counter total at least ", expected.ToString(CultureInfo.InvariantCulture),
                 "\n  but it was ", value.Total.ToString(CultureInfo.InvariantCulture)));
     }
@@ -56,7 +56,7 @@ public static class InstrumentCaptureAssertions
         ArgumentNullException.ThrowIfNull(value);
         return value.Total == expected
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
                 "the capture to have up-down counter value ", expected.ToString(CultureInfo.InvariantCulture),
                 "\n  but it was ", value.Total.ToString(CultureInfo.InvariantCulture)));
     }
@@ -72,7 +72,7 @@ public static class InstrumentCaptureAssertions
         ArgumentNullException.ThrowIfNull(value);
         return value.Count == expected
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
                 "the capture to have captured ", expected.ToString(CultureInfo.InvariantCulture),
                 " measurement(s)\n  but it had ", value.Count.ToString(CultureInfo.InvariantCulture)));
     }
@@ -87,7 +87,7 @@ public static class InstrumentCaptureAssertions
         ArgumentNullException.ThrowIfNull(value);
         return value.Count is 0
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
                 "the capture to have recorded no measurements\n  but it had ",
                 value.Count.ToString(CultureInfo.InvariantCulture)));
     }
@@ -104,7 +104,7 @@ public static class InstrumentCaptureAssertions
         ArgumentNullException.ThrowIfNull(value);
         return value.LastValue is { } last && last.Equals(expected)
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
                 "the capture to have last value ", expected.ToString(CultureInfo.InvariantCulture),
                 "\n  but it was ", value.LastValue?.ToString(CultureInfo.InvariantCulture) ?? "(no measurements)"));
     }
@@ -124,7 +124,7 @@ public static class InstrumentCaptureAssertions
         ArgumentNullException.ThrowIfNull(tagKey);
         return value.HasMeasurementTagged(tagKey, tagValue)
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
                 "the capture to have a measurement tagged ", tagKey, "=",
                 Convert.ToString(tagValue, CultureInfo.InvariantCulture), "\n  but none matched"));
     }

@@ -27,6 +27,7 @@ public sealed class InstrumentCapture : IDisposable
     private readonly Func<IReadOnlyList<CapturedMeasurement>> _rawSnapshot;
     private readonly Action _recordObservable;
     private readonly Func<int, CancellationToken, Task> _wait;
+    private readonly object _token = new();
 
     /// <summary>Gets the name of the captured instrument.</summary>
     public string InstrumentName { get; }
@@ -103,11 +104,17 @@ public sealed class InstrumentCapture : IDisposable
     public double? LastValue => Measurements.LastValue;
 
     /// <summary>Takes a baseline at the current point in the stream for a later <see cref="Since"/> delta.</summary>
-    public MeasurementBaseline Snapshot() => new(_rawSnapshot().Count);
+    public MeasurementBaseline Snapshot() => new(_rawSnapshot().Count, _token);
 
     /// <summary>Returns only the measurements captured after <paramref name="baseline"/> was taken.</summary>
-    /// <param name="baseline">A baseline previously returned by <see cref="Snapshot"/>.</param>
-    public MeasurementSet Since(MeasurementBaseline baseline) => new(_rawSnapshot().Skip(baseline.Count));
+    /// <param name="baseline">A baseline previously returned by this capture's <see cref="Snapshot"/>.</param>
+    /// <exception cref="ArgumentException"><paramref name="baseline"/> was taken from a different capture.</exception>
+    public MeasurementSet Since(MeasurementBaseline baseline)
+    {
+        if (!ReferenceEquals(baseline.Owner, _token))
+            throw new ArgumentException("The baseline was taken from a different InstrumentCapture.", nameof(baseline));
+        return new(_rawSnapshot().Skip(baseline.Count));
+    }
 
     /// <summary>Pulls the current values of the instrument when it is observable (a gauge).</summary>
     public void RecordObservable() => _recordObservable();

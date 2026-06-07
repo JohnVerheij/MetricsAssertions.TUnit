@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Threading;
@@ -77,5 +78,20 @@ internal sealed class MeasurementSetAssertionsTests
 
         await Assert.That(async () => await Assert.That(set).HasEveryMeasurementTagged("verb")).Throws<AssertionException>();
         await Assert.That(async () => await Assert.That(set).HasTaggedMeasurement("route", "/z")).Throws<AssertionException>();
+    }
+
+    [Test]
+    public async Task ToleranceAndRangeBounds_AreValidated(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter("MetricsAssertions.TUnit.Tests.MS.Validate");
+        var histogram = meter.CreateHistogram<int>("latency");
+        using var capture = InstrumentCapture.Of(histogram);
+        histogram.Record(10);
+        MeasurementSet set = capture.Measurements;
+
+        await Assert.That(() => MeasurementSetAssertions.HasSampleSum(set, 10, -1)).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(() => MeasurementSetAssertions.HasSampleSum(set, 10, double.NaN)).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(() => MeasurementSetAssertions.HasAllSamplesInRange(set, 5, 2)).Throws<ArgumentOutOfRangeException>();
     }
 }

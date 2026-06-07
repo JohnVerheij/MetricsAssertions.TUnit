@@ -30,6 +30,12 @@ The full surface: a queryable `MeasurementSet`, multi-instrument `MeterCapture`,
   up-down-counter totals, measurement counts, emptiness, last value, histogram sum/average/range, exact and
   order-insensitive sample sets, and tag-consistency) over `InstrumentCapture`, `MeasurementSet`, and
   `MeterCapture`.
+- **Failure diagnostics:** every assertion dumps the captured measurements (instrument, value, tags,
+  timestamp) under the failure, so a mismatch shows what was actually recorded, not only the mismatched
+  scalar.
+- **Hardening:** tolerance arguments are validated (finite, non-negative), inverted range bounds are
+  rejected, baselines are bound to their originating capture, duplicate `MeterCapture` instrument names
+  dispose the prior capture, and unknown meter-capture instruments fail as assertions rather than throwing.
 
 ### Changed
 

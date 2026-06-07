@@ -25,10 +25,13 @@ public static class MeterCaptureAssertions
     {
         ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(instrumentName);
+        if (!value.Contains(instrumentName))
+            return MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
+                "the capture to have a bundled instrument named ", instrumentName, "\n  but it was not bundled"));
         var actual = value.CounterTotal(instrumentName);
         return actual == expected
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
                 "the capture to have counter ", instrumentName, " total ",
                 expected.ToString(CultureInfo.InvariantCulture),
                 "\n  but it was ", actual.ToString(CultureInfo.InvariantCulture)));
@@ -46,10 +49,13 @@ public static class MeterCaptureAssertions
     {
         ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(instrumentName);
+        if (!value.Contains(instrumentName))
+            return MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
+                "the capture to have a bundled instrument named ", instrumentName, "\n  but it was not bundled"));
         var actual = value.CounterTotal(instrumentName);
         return actual == expected
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
                 "the capture to have up-down counter ", instrumentName, " value ",
                 expected.ToString(CultureInfo.InvariantCulture),
                 "\n  but it was ", actual.ToString(CultureInfo.InvariantCulture)));
@@ -67,10 +73,13 @@ public static class MeterCaptureAssertions
     {
         ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(instrumentName);
+        if (!value.Contains(instrumentName))
+            return MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
+                "the capture to have a bundled instrument named ", instrumentName, "\n  but it was not bundled"));
         var actual = value.MeasurementCount(instrumentName);
         return actual == expected
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
                 "the capture to have ", expected.ToString(CultureInfo.InvariantCulture),
                 " measurement(s) for ", instrumentName,
                 "\n  but it had ", actual.ToString(CultureInfo.InvariantCulture)));
@@ -90,10 +99,13 @@ public static class MeterCaptureAssertions
     {
         ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(instrumentName);
+        if (!value.Contains(instrumentName))
+            return MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
+                "the capture to have a bundled instrument named ", instrumentName, "\n  but it was not bundled"));
         ArgumentNullException.ThrowIfNull(tagKey);
         return value.HasMeasurementTagged(instrumentName, tagKey, tagValue)
             ? AssertionResult.Passed
-            : AssertionResult.Failed(string.Concat(
+            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
                 "the capture to have a measurement for ", instrumentName, " tagged ", tagKey, "=",
                 Convert.ToString(tagValue, CultureInfo.InvariantCulture), "\n  but none matched"));
     }

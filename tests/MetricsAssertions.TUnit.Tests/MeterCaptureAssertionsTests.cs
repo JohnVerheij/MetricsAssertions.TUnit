@@ -36,4 +36,22 @@ internal sealed class MeterCaptureAssertionsTests
         await Assert.That(async () => await Assert.That(capture).HasMeasurementCount("orders.placed", 99)).Throws<AssertionException>();
         await Assert.That(async () => await Assert.That(capture).HasTaggedMeasurement("orders.placed", "region", "us")).Throws<AssertionException>();
     }
+
+    [Test]
+    public async Task UpDownCounterAndUnknownInstrument(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter("MetricsAssertions.TUnit.Tests.MC.UpDown");
+        var udc = meter.CreateUpDownCounter<long>("connections");
+        using var capture = MeterCapture.For("MetricsAssertions.TUnit.Tests.MC.UpDown").Add<long>("connections");
+        udc.Add(5);
+        udc.Add(-2);
+
+        await Assert.That(capture).HasUpDownCounterValue("connections", 3);
+
+        await Assert.That(async () => await Assert.That(capture).HasCounterTotal("nope", 1)).Throws<AssertionException>();
+        await Assert.That(async () => await Assert.That(capture).HasUpDownCounterValue("nope", 1)).Throws<AssertionException>();
+        await Assert.That(async () => await Assert.That(capture).HasMeasurementCount("nope", 1)).Throws<AssertionException>();
+        await Assert.That(async () => await Assert.That(capture).HasTaggedMeasurement("nope", "k", "v")).Throws<AssertionException>();
+    }
 }

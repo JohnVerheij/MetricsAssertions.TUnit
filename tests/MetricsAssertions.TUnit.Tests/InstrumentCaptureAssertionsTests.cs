@@ -67,4 +67,43 @@ internal sealed class InstrumentCaptureAssertionsTests
         await Assert.That(capture).HasTaggedMeasurement("route", "/orders");
         await Assert.That(async () => await Assert.That(capture).HasTaggedMeasurement("route", "/missing")).Throws<AssertionException>();
     }
+
+    [Test]
+    public async Task HasUpDownCounterValue_RealUpDownCounter(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter("MetricsAssertions.TUnit.Tests.IC.UpDown");
+        var udc = meter.CreateUpDownCounter<long>("connections");
+        using var capture = InstrumentCapture.Of(udc);
+        udc.Add(5);
+        udc.Add(-2);
+
+        await Assert.That(capture).HasUpDownCounterValue(3);
+        await Assert.That(async () => await Assert.That(capture).HasUpDownCounterValue(99)).Throws<AssertionException>();
+    }
+
+    [Test]
+    public async Task FailureMessage_DumpsCapturedMeasurements(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter("MetricsAssertions.TUnit.Tests.IC.Dump");
+        var counter = meter.CreateCounter<long>("requests");
+        using var capture = InstrumentCapture.Of(counter);
+        counter.Add(3, new KeyValuePair<string, object?>("route", "/orders"));
+
+        AssertionException? caught = null;
+        try
+        {
+            await Assert.That(capture).HasMeasurementCount(5);
+        }
+        catch (AssertionException e)
+        {
+            caught = e;
+        }
+
+        await Assert.That(caught).IsNotNull();
+        await Assert.That(caught!.Message).Contains("captured:");
+        await Assert.That(caught.Message).Contains("requests = 3");
+        await Assert.That(caught.Message).Contains("route=/orders");
+    }
 }

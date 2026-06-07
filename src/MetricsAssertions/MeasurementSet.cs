@@ -126,6 +126,33 @@ public sealed class MeasurementSet
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Renders every measurement on its own line (instrument, value, tags, timestamp) in capture order for
+    /// failure diagnostics, or a placeholder when the set is empty. Unlike <see cref="ToSnapshotString"/>
+    /// (sorted, for stable baselines), this preserves capture order and carries timestamps.
+    /// </summary>
+    public string Describe()
+    {
+        if (All.Count is 0)
+            return "    (no measurements captured)";
+
+        var sb = new StringBuilder();
+        for (int i = 0; i < All.Count; i++)
+        {
+            if (i > 0)
+                sb.Append('\n');
+            CapturedMeasurement m = All[i];
+            sb.Append("    ").Append(m.InstrumentName).Append(" = ")
+                .Append(m.Value.ToString(CultureInfo.InvariantCulture));
+            string tags = FormatTags(m);
+            if (tags.Length > 0)
+                sb.Append(" {").Append(tags).Append('}');
+            sb.Append(" @ ").Append(m.Timestamp.ToString("O", CultureInfo.InvariantCulture));
+        }
+
+        return sb.ToString();
+    }
+
     private static bool TagEquals(CapturedMeasurement measurement, string key, object? value)
         => measurement.Tags.TryGetValue(key, out var actual)
             && string.Equals(

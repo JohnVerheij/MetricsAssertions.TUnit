@@ -35,8 +35,7 @@ namespace MetricsAssertions
     }
     public readonly struct MeasurementBaseline : System.IEquatable<MetricsAssertions.MeasurementBaseline>
     {
-        public MeasurementBaseline(int Count) { }
-        public int Count { get; init; }
+        public int Count { get; }
     }
     public sealed class MeasurementSet
     {
@@ -53,6 +52,7 @@ namespace MetricsAssertions
         public System.Collections.Generic.IReadOnlyList<double> Values { get; }
         public static MetricsAssertions.MeasurementSet Empty { get; }
         public bool AllValuesInRange(double min, double max) { }
+        public string Describe() { }
         public bool EveryMeasurementCarriesTag(string key) { }
         public MetricsAssertions.MeasurementSet ForInstrument(string instrumentName) { }
         public bool SamplesEqual(params double[] expected) { }
@@ -72,6 +72,7 @@ namespace MetricsAssertions
             where T :  struct { }
         public MetricsAssertions.MeterCapture Add<T>(string instrumentName, System.TimeProvider? timeProvider = null)
             where T :  struct { }
+        public bool Contains(string instrumentName) { }
         public long CounterTotal(string instrumentName) { }
         public void Dispose() { }
         public bool HasMeasurementTagged(string instrumentName, string tagKey, object? tagValue) { }
