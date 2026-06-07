@@ -28,13 +28,16 @@ public static class MeterCaptureAssertions
         if (!value.Contains(instrumentName))
             return MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
                 "the capture to have a bundled instrument named ", instrumentName, "\n  but it was not bundled"));
-        var actual = value.CounterTotal(instrumentName);
-        return actual == expected
+        MeasurementSet set = value[instrumentName].Measurements;
+        if (set.Min < 0)
+            return MeasurementDiagnostics.Failed(set, string.Concat(
+                "a counter never decrements, but ", instrumentName, " recorded a negative delta"));
+        return set.Total == expected
             ? AssertionResult.Passed
-            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
+            : MeasurementDiagnostics.Failed(set, string.Concat(
                 "the capture to have counter ", instrumentName, " total ",
                 expected.ToString(CultureInfo.InvariantCulture),
-                "\n  but it was ", actual.ToString(CultureInfo.InvariantCulture)));
+                "\n  but it was ", set.Total.ToString(CultureInfo.InvariantCulture)));
     }
 
     /// <summary>Asserts the net value of a bundled up-down counter equals <paramref name="expected"/>.</summary>
@@ -99,10 +102,10 @@ public static class MeterCaptureAssertions
     {
         ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(instrumentName);
+        ArgumentNullException.ThrowIfNull(tagKey);
         if (!value.Contains(instrumentName))
             return MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
                 "the capture to have a bundled instrument named ", instrumentName, "\n  but it was not bundled"));
-        ArgumentNullException.ThrowIfNull(tagKey);
         return value.HasMeasurementTagged(instrumentName, tagKey, tagValue)
             ? AssertionResult.Passed
             : MeasurementDiagnostics.Failed(value.Measurements, string.Concat(

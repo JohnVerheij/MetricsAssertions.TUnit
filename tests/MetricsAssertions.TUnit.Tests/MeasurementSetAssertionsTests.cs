@@ -94,4 +94,18 @@ internal sealed class MeasurementSetAssertionsTests
         await Assert.That(() => MeasurementSetAssertions.HasSampleSum(set, 10, double.NaN)).Throws<ArgumentOutOfRangeException>();
         await Assert.That(() => MeasurementSetAssertions.HasAllSamplesInRange(set, 5, 2)).Throws<ArgumentOutOfRangeException>();
     }
+
+    [Test]
+    public async Task HasCounterTotal_RejectsNegativeDeltas(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter("MetricsAssertions.TUnit.Tests.MS.Neg");
+        var udc = meter.CreateUpDownCounter<long>("balance");
+        using var capture = InstrumentCapture.Of(udc);
+        udc.Add(5);
+        udc.Add(-2);
+        MeasurementSet set = capture.Measurements;
+
+        await Assert.That(async () => await Assert.That(set).HasCounterTotal(3)).Throws<AssertionException>();
+    }
 }

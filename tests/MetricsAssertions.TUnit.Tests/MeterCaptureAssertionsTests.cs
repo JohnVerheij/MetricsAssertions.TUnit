@@ -48,6 +48,7 @@ internal sealed class MeterCaptureAssertionsTests
         udc.Add(-2);
 
         await Assert.That(capture).HasUpDownCounterValue("connections", 3);
+        await Assert.That(async () => await Assert.That(capture).HasCounterTotal("connections", 3)).Throws<AssertionException>();
 
         await Assert.That(async () => await Assert.That(capture).HasCounterTotal("nope", 1)).Throws<AssertionException>();
         await Assert.That(async () => await Assert.That(capture).HasUpDownCounterValue("nope", 1)).Throws<AssertionException>();

@@ -22,11 +22,15 @@ public static class InstrumentCaptureAssertions
     public static AssertionResult HasCounterTotal(this InstrumentCapture value, long expected)
     {
         ArgumentNullException.ThrowIfNull(value);
-        return value.Total == expected
+        MeasurementSet set = value.Measurements;
+        if (set.Min < 0)
+            return MeasurementDiagnostics.Failed(set,
+                "a counter never decrements, but the capture recorded a negative delta");
+        return set.Total == expected
             ? AssertionResult.Passed
-            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
+            : MeasurementDiagnostics.Failed(set, string.Concat(
                 "the capture to have counter total ", expected.ToString(CultureInfo.InvariantCulture),
-                "\n  but it was ", value.Total.ToString(CultureInfo.InvariantCulture)));
+                "\n  but it was ", set.Total.ToString(CultureInfo.InvariantCulture)));
     }
 
     /// <summary>Asserts the net total of the captured counter is at least <paramref name="expected"/>.</summary>

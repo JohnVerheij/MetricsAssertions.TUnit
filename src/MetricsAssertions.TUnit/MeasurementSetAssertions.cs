@@ -37,6 +37,9 @@ public static class MeasurementSetAssertions
     public static AssertionResult HasCounterTotal(this MeasurementSet value, long expected)
     {
         ArgumentNullException.ThrowIfNull(value);
+        if (value.Min < 0)
+            return MeasurementDiagnostics.Failed(value,
+                "a counter never decrements, but the set contains a negative value");
         return value.Total == expected
             ? AssertionResult.Passed
             : MeasurementDiagnostics.Failed(value, string.Concat(
