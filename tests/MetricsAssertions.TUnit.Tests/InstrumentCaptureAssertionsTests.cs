@@ -81,8 +81,9 @@ internal sealed class InstrumentCaptureAssertionsTests
         await Assert.That(capture).HasUpDownCounterValue(3);
         await Assert.That(async () => await Assert.That(capture).HasUpDownCounterValue(99)).Throws<AssertionException>();
 
-        // HasCounterTotal rejects the negative delta a real counter could never produce
+        // HasCounterTotal and HasCounterTotalAtLeast reject the negative delta a real counter could never produce
         await Assert.That(async () => await Assert.That(capture).HasCounterTotal(3)).Throws<AssertionException>();
+        await Assert.That(async () => await Assert.That(capture).HasCounterTotalAtLeast(1)).Throws<AssertionException>();
     }
 
     [Test]

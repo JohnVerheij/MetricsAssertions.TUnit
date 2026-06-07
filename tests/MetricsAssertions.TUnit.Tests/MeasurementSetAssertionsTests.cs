@@ -107,5 +107,6 @@ internal sealed class MeasurementSetAssertionsTests
         MeasurementSet set = capture.Measurements;
 
         await Assert.That(async () => await Assert.That(set).HasCounterTotal(3)).Throws<AssertionException>();
+        await Assert.That(async () => await Assert.That(set).HasCounterTotalAtLeast(1)).Throws<AssertionException>();
     }
 }
