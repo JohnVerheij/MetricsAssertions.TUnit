@@ -155,6 +155,7 @@ No sibling-package-name prefix may appear in another sibling's public API.
 - `Json...` typenames and member names belong to `JsonAssertions` only
 - `Sse...` typenames and member names belong to `SseAssertions` only
 - `Grpc...` typenames and member names belong to `GrpcAssertions` only
+- `Tracing...` typenames and member names belong to `TracingAssertions` only
 - `Metrics...` typenames and member names belong to `MetricsAssertions` only
 
 Applies to typenames AND method names AND extension method names in the
@@ -198,7 +199,8 @@ test-projects-only blockquote.
 | `JsonAssertions.TUnit` | JSON content assertions over `System.Text.Json`: path / value / shape on `JsonDocument`, HTTP-response JSON, and `JsonSerializerContext`-registered types. |
 | `SseAssertions.TUnit` | Server-Sent Events wire-format assertions: event-count, field shape (`event:`, `data:`, `id:`, `retry:`), and stream content validation. |
 | `GrpcAssertions.TUnit` | gRPC call outcomes: `RpcException` presence, `StatusCode`, and `Status.Detail`. Transport-level status, not Protobuf message structure. |
-| `MetricsAssertions.TUnit` | `System.Diagnostics.Metrics` instrument measurements: capture, and assertions over captured measurements, built on the first-party `MetricCollector` testing primitive. |
+| `TracingAssertions.TUnit` | `System.Diagnostics.Activity` spans: operation name, tags, status, and parent/child and same-trace relationships. Captured via a raw `ActivityListener`, no OpenTelemetry SDK. |
+| `MetricsAssertions.TUnit` | `System.Diagnostics.Metrics` instrument measurements: capture and assertions over captured measurements, built on the first-party `MetricCollector` testing primitive. |
 
 The policy goal is "high-quality niche per package", not exhaustive
 ecosystem coverage. Domains that fall outside the per-package scope
@@ -232,6 +234,7 @@ package's README:
 | `JsonAssertions.TUnit` | single-package (only `JsonAssertions.TUnit`) |
 | `SseAssertions.TUnit` | core (`SseAssertions`) + adapter (`SseAssertions.TUnit`) |
 | `GrpcAssertions.TUnit` | core (`GrpcAssertions`) + adapter (`GrpcAssertions.TUnit`) |
+| `TracingAssertions.TUnit` | core (`TracingAssertions`) + adapter (`TracingAssertions.TUnit`) |
 | `MetricsAssertions.TUnit` | core (`MetricsAssertions`) + adapter (`MetricsAssertions.TUnit`) |
 
 **Core+adapter** ships the framework-agnostic primitives (parsers,

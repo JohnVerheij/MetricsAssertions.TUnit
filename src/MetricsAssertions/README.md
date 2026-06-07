@@ -8,7 +8,7 @@
 
 Framework-agnostic core for fluent metric-measurement assertions over `System.Diagnostics.Metrics` instruments, built on the first-party `MetricCollector` testing primitive. Test-framework assertion entry points live in adapter packages; **[MetricsAssertions.TUnit](https://www.nuget.org/packages/MetricsAssertions.TUnit/)** ships today.
 
-## What ships (foundation release v0.0.1)
+## What ships
 
 - `InstrumentCapture.Of<T>(Instrument<T>, TimeProvider?)` captures the measurements a referenceable instrument records, via `MetricCollector<T>`.
 - `InstrumentCapture.Measurements` (projected snapshot) and `Count`.
