@@ -1,0 +1,47 @@
+# MetricsAssertions.TUnit
+
+[![NuGet](https://img.shields.io/nuget/v/MetricsAssertions.TUnit.svg)](https://www.nuget.org/packages/MetricsAssertions.TUnit/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com/download/dotnet/10.0)
+
+> **Scope:** Test projects only. Not intended for production code.
+
+TUnit-native fluent assertions over `System.Diagnostics.Metrics` instruments, built on the first-party `MetricCollector` testing primitive. AOT-compatible, trimmable, no runtime reflection in the assertion path.
+
+## What ships (foundation release v0.0.1)
+
+| Entry point | Behavior |
+|---|---|
+| `Assert.That(capture).HasMeasurementCount(n)` | Asserts exactly `n` measurements were captured. |
+
+The framework-agnostic core (`MetricsAssertions`) ships `InstrumentCapture.Of<T>(Instrument<T>)` to capture a referenceable instrument's measurements, the `Measurements` projected snapshot, `Count`, and the `CapturedMeasurement` record (instrument name, value projected to `double`, tags, timestamp). The full surface (meter-wide capture, counter totals, tag and delta queries, and more assertions) lands in 0.1.0.
+
+## Install
+
+```bash
+dotnet add package MetricsAssertions.TUnit
+```
+
+**Requirements:** TUnit 1.48.6 or later, .NET 10. The framework-agnostic `MetricsAssertions` core comes transitively.
+
+## Quick start
+
+```csharp
+using System.Diagnostics.Metrics;
+using MetricsAssertions;
+
+using var meter = new Meter("MyCompany.Orders");
+var placed = meter.CreateCounter<long>("orders.placed");
+using var capture = InstrumentCapture.Of(placed);
+
+placed.Add(1);
+placed.Add(1);
+
+await Assert.That(capture).HasMeasurementCount(2);
+```
+
+The full reference is in the [GitHub README](https://github.com/JohnVerheij/MetricsAssertions.TUnit#readme).
+
+## License
+
+MIT.

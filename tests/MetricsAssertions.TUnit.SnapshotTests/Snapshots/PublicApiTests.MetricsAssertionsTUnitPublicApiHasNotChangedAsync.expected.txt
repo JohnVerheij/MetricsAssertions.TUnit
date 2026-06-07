@@ -1,0 +1,25 @@
+[assembly: System.Reflection.AssemblyMetadata("IsAotCompatible", "True")]
+[assembly: System.Reflection.AssemblyMetadata("IsTrimmable", "True")]
+[assembly: System.Reflection.AssemblyMetadata("RepositoryUrl", "https://github.com/JohnVerheij/MetricsAssertions.TUnit")]
+[assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v10.0", FrameworkDisplayName=".NET 10.0")]
+namespace MetricsAssertions.TUnit
+{
+    public static class InstrumentCaptureAssertions
+    {
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasMeasurementCount(this MetricsAssertions.InstrumentCapture value, int expected) { }
+    }
+}
+namespace TUnit.Assertions.Extensions
+{
+    public static class InstrumentCaptureAssertions
+    {
+        public static TUnit.Assertions.Extensions.InstrumentCapture_HasMeasurementCount_Int_Assertion HasMeasurementCount(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, int expected, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
+    }
+    public sealed class InstrumentCapture_HasMeasurementCount_Int_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.InstrumentCapture>
+    {
+        public InstrumentCapture_HasMeasurementCount_Int_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.InstrumentCapture> context, int expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.InstrumentCapture> metadata) { }
+        protected override string GetExpectation() { }
+    }
+}

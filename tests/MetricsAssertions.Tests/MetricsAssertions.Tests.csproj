@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>MetricsAssertions.Tests</RootNamespace>
+    <AssemblyName>MetricsAssertions.Tests</AssemblyName>
+
+    <IsPackable>false</IsPackable>
+    <IsPublishable>false</IsPublishable>
+    <IsTestProject>true</IsTestProject>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      This project tests the framework-agnostic core (MetricsAssertions) in isolation.
+      It deliberately does NOT reference MetricsAssertions.TUnit (the adapter); if a future
+      regression leaks a TUnit type into the core's public surface, the compile breaks here
+      before the adapter project hides it via its own TUnit reference.
+    -->
+    <PackageReference Include="TUnit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/MetricsAssertions/MetricsAssertions.csproj" />
+  </ItemGroup>
+
+</Project>

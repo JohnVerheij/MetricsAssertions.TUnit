@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="src/MetricsAssertions/MetricsAssertions.csproj" />
+  <Project Path="src/MetricsAssertions.TUnit/MetricsAssertions.TUnit.csproj" />
+  <Project Path="tests/MetricsAssertions.Tests/MetricsAssertions.Tests.csproj" />
+  <Project Path="tests/MetricsAssertions.TUnit.Tests/MetricsAssertions.TUnit.Tests.csproj" />
+  <Project Path="tests/MetricsAssertions.TUnit.SnapshotTests/MetricsAssertions.TUnit.SnapshotTests.csproj" />
+</Solution>
