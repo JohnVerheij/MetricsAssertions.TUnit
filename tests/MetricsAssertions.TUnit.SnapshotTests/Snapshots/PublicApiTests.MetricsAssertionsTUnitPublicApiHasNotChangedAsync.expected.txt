@@ -7,19 +7,220 @@ namespace MetricsAssertions.TUnit
     public static class InstrumentCaptureAssertions
     {
         [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasCounterTotal(this MetricsAssertions.InstrumentCapture value, long expected) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasCounterTotalAtLeast(this MetricsAssertions.InstrumentCapture value, long expected) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasLastValue(this MetricsAssertions.InstrumentCapture value, double expected) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
         public static TUnit.Assertions.Core.AssertionResult HasMeasurementCount(this MetricsAssertions.InstrumentCapture value, int expected) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasNoMeasurements(this MetricsAssertions.InstrumentCapture value) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasTaggedMeasurement(this MetricsAssertions.InstrumentCapture value, string tagKey, object? tagValue) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasUpDownCounterValue(this MetricsAssertions.InstrumentCapture value, long expected) { }
+    }
+    public static class MeasurementSetAssertions
+    {
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasAllSamplesInRange(this MetricsAssertions.MeasurementSet value, double min, double max) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasCounterTotal(this MetricsAssertions.MeasurementSet value, long expected) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasCounterTotalAtLeast(this MetricsAssertions.MeasurementSet value, long expected) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasEveryMeasurementTagged(this MetricsAssertions.MeasurementSet value, string tagKey) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasMeasurementCount(this MetricsAssertions.MeasurementSet value, int expected) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasNoMeasurements(this MetricsAssertions.MeasurementSet value) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasSampleAverage(this MetricsAssertions.MeasurementSet value, double expected, double tolerance = 0) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasSampleSum(this MetricsAssertions.MeasurementSet value, double expected, double tolerance = 0) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasSamples(this MetricsAssertions.MeasurementSet value, params double[] expected) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasSamplesInAnyOrder(this MetricsAssertions.MeasurementSet value, params double[] expected) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasTaggedMeasurement(this MetricsAssertions.MeasurementSet value, string tagKey, object? tagValue) { }
+    }
+    public static class MeterCaptureAssertions
+    {
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasCounterTotal(this MetricsAssertions.MeterCapture value, string instrumentName, long expected) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasMeasurementCount(this MetricsAssertions.MeterCapture value, string instrumentName, int expected) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasTaggedMeasurement(this MetricsAssertions.MeterCapture value, string instrumentName, string tagKey, object? tagValue) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasUpDownCounterValue(this MetricsAssertions.MeterCapture value, string instrumentName, long expected) { }
     }
 }
 namespace TUnit.Assertions.Extensions
 {
     public static class InstrumentCaptureAssertions
     {
+        public static TUnit.Assertions.Extensions.InstrumentCapture_HasCounterTotal_Long_Assertion HasCounterTotal(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, long expected, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
+        public static TUnit.Assertions.Extensions.InstrumentCapture_HasCounterTotalAtLeast_Long_Assertion HasCounterTotalAtLeast(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, long expected, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
+        public static TUnit.Assertions.Extensions.InstrumentCapture_HasLastValue_Double_Assertion HasLastValue(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, double expected, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
         public static TUnit.Assertions.Extensions.InstrumentCapture_HasMeasurementCount_Int_Assertion HasMeasurementCount(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, int expected, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
+        public static TUnit.Assertions.Extensions.InstrumentCapture_HasNoMeasurements_Assertion HasNoMeasurements(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source) { }
+        public static TUnit.Assertions.Extensions.InstrumentCapture_HasTaggedMeasurement_String_Object_Assertion HasTaggedMeasurement(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, string tagKey, object? tagValue, [System.Runtime.CompilerServices.CallerArgumentExpression("tagKey")] string? tagKeyExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tagValue")] string? tagValueExpression = null) { }
+        public static TUnit.Assertions.Extensions.InstrumentCapture_HasUpDownCounterValue_Long_Assertion HasUpDownCounterValue(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, long expected, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
+    }
+    public sealed class InstrumentCapture_HasCounterTotalAtLeast_Long_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.InstrumentCapture>
+    {
+        public InstrumentCapture_HasCounterTotalAtLeast_Long_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.InstrumentCapture> context, long expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.InstrumentCapture> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class InstrumentCapture_HasCounterTotal_Long_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.InstrumentCapture>
+    {
+        public InstrumentCapture_HasCounterTotal_Long_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.InstrumentCapture> context, long expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.InstrumentCapture> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class InstrumentCapture_HasLastValue_Double_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.InstrumentCapture>
+    {
+        public InstrumentCapture_HasLastValue_Double_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.InstrumentCapture> context, double expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.InstrumentCapture> metadata) { }
+        protected override string GetExpectation() { }
     }
     public sealed class InstrumentCapture_HasMeasurementCount_Int_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.InstrumentCapture>
     {
         public InstrumentCapture_HasMeasurementCount_Int_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.InstrumentCapture> context, int expected) { }
         protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.InstrumentCapture> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class InstrumentCapture_HasNoMeasurements_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.InstrumentCapture>
+    {
+        public InstrumentCapture_HasNoMeasurements_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.InstrumentCapture> context) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.InstrumentCapture> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class InstrumentCapture_HasTaggedMeasurement_String_Object_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.InstrumentCapture>
+    {
+        public InstrumentCapture_HasTaggedMeasurement_String_Object_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.InstrumentCapture> context, string tagKey, object? tagValue) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.InstrumentCapture> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class InstrumentCapture_HasUpDownCounterValue_Long_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.InstrumentCapture>
+    {
+        public InstrumentCapture_HasUpDownCounterValue_Long_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.InstrumentCapture> context, long expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.InstrumentCapture> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public static class MeasurementSetAssertions
+    {
+        public static TUnit.Assertions.Extensions.MeasurementSet_HasAllSamplesInRange_Double_Double_Assertion HasAllSamplesInRange(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, double min, double max, [System.Runtime.CompilerServices.CallerArgumentExpression("min")] string? minExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("max")] string? maxExpression = null) { }
+        public static TUnit.Assertions.Extensions.MeasurementSet_HasCounterTotal_Long_Assertion HasCounterTotal(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, long expected, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
+        public static TUnit.Assertions.Extensions.MeasurementSet_HasCounterTotalAtLeast_Long_Assertion HasCounterTotalAtLeast(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, long expected, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
+        public static TUnit.Assertions.Extensions.MeasurementSet_HasEveryMeasurementTagged_String_Assertion HasEveryMeasurementTagged(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, string tagKey, [System.Runtime.CompilerServices.CallerArgumentExpression("tagKey")] string? tagKeyExpression = null) { }
+        public static TUnit.Assertions.Extensions.MeasurementSet_HasMeasurementCount_Int_Assertion HasMeasurementCount(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, int expected, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
+        public static TUnit.Assertions.Extensions.MeasurementSet_HasNoMeasurements_Assertion HasNoMeasurements(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source) { }
+        public static TUnit.Assertions.Extensions.MeasurementSet_HasSampleAverage_Double_Double_Assertion HasSampleAverage(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, double expected, double tolerance = 0, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tolerance")] string? toleranceExpression = null) { }
+        public static TUnit.Assertions.Extensions.MeasurementSet_HasSampleSum_Double_Double_Assertion HasSampleSum(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, double expected, double tolerance = 0, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tolerance")] string? toleranceExpression = null) { }
+        public static TUnit.Assertions.Extensions.MeasurementSet_HasSamples_DoubleArray_Assertion HasSamples(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, params double[] expected) { }
+        public static TUnit.Assertions.Extensions.MeasurementSet_HasSamplesInAnyOrder_DoubleArray_Assertion HasSamplesInAnyOrder(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, params double[] expected) { }
+        public static TUnit.Assertions.Extensions.MeasurementSet_HasTaggedMeasurement_String_Object_Assertion HasTaggedMeasurement(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, string tagKey, object? tagValue, [System.Runtime.CompilerServices.CallerArgumentExpression("tagKey")] string? tagKeyExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tagValue")] string? tagValueExpression = null) { }
+    }
+    public sealed class MeasurementSet_HasAllSamplesInRange_Double_Double_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
+    {
+        public MeasurementSet_HasAllSamplesInRange_Double_Double_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, double min, double max) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeasurementSet_HasCounterTotalAtLeast_Long_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
+    {
+        public MeasurementSet_HasCounterTotalAtLeast_Long_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, long expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeasurementSet_HasCounterTotal_Long_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
+    {
+        public MeasurementSet_HasCounterTotal_Long_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, long expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeasurementSet_HasEveryMeasurementTagged_String_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
+    {
+        public MeasurementSet_HasEveryMeasurementTagged_String_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, string tagKey) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeasurementSet_HasMeasurementCount_Int_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
+    {
+        public MeasurementSet_HasMeasurementCount_Int_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, int expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeasurementSet_HasNoMeasurements_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
+    {
+        public MeasurementSet_HasNoMeasurements_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeasurementSet_HasSampleAverage_Double_Double_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
+    {
+        public MeasurementSet_HasSampleAverage_Double_Double_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, double expected, double tolerance) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeasurementSet_HasSampleSum_Double_Double_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
+    {
+        public MeasurementSet_HasSampleSum_Double_Double_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, double expected, double tolerance) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeasurementSet_HasSamplesInAnyOrder_DoubleArray_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
+    {
+        public MeasurementSet_HasSamplesInAnyOrder_DoubleArray_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, double[] expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeasurementSet_HasSamples_DoubleArray_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
+    {
+        public MeasurementSet_HasSamples_DoubleArray_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, double[] expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeasurementSet_HasTaggedMeasurement_String_Object_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
+    {
+        public MeasurementSet_HasTaggedMeasurement_String_Object_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, string tagKey, object? tagValue) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public static class MeterCaptureAssertions
+    {
+        public static TUnit.Assertions.Extensions.MeterCapture_HasCounterTotal_String_Long_Assertion HasCounterTotal(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeterCapture> source, string instrumentName, long expected, [System.Runtime.CompilerServices.CallerArgumentExpression("instrumentName")] string? instrumentNameExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
+        public static TUnit.Assertions.Extensions.MeterCapture_HasMeasurementCount_String_Int_Assertion HasMeasurementCount(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeterCapture> source, string instrumentName, int expected, [System.Runtime.CompilerServices.CallerArgumentExpression("instrumentName")] string? instrumentNameExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
+        public static TUnit.Assertions.Extensions.MeterCapture_HasTaggedMeasurement_String_String_Object_Assertion HasTaggedMeasurement(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeterCapture> source, string instrumentName, string tagKey, object? tagValue, [System.Runtime.CompilerServices.CallerArgumentExpression("instrumentName")] string? instrumentNameExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tagKey")] string? tagKeyExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tagValue")] string? tagValueExpression = null) { }
+        public static TUnit.Assertions.Extensions.MeterCapture_HasUpDownCounterValue_String_Long_Assertion HasUpDownCounterValue(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeterCapture> source, string instrumentName, long expected, [System.Runtime.CompilerServices.CallerArgumentExpression("instrumentName")] string? instrumentNameExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
+    }
+    public sealed class MeterCapture_HasCounterTotal_String_Long_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeterCapture>
+    {
+        public MeterCapture_HasCounterTotal_String_Long_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeterCapture> context, string instrumentName, long expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeterCapture> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeterCapture_HasMeasurementCount_String_Int_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeterCapture>
+    {
+        public MeterCapture_HasMeasurementCount_String_Int_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeterCapture> context, string instrumentName, int expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeterCapture> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeterCapture_HasTaggedMeasurement_String_String_Object_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeterCapture>
+    {
+        public MeterCapture_HasTaggedMeasurement_String_String_Object_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeterCapture> context, string instrumentName, string tagKey, object? tagValue) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeterCapture> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeterCapture_HasUpDownCounterValue_String_Long_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeterCapture>
+    {
+        public MeterCapture_HasUpDownCounterValue_String_Long_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeterCapture> context, string instrumentName, long expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeterCapture> metadata) { }
         protected override string GetExpectation() { }
     }
 }

@@ -9,7 +9,13 @@ namespace MetricsAssertions;
 /// the tags attached to it, and the time it was collected.
 /// </summary>
 /// <param name="InstrumentName">The name of the instrument that emitted the measurement.</param>
-/// <param name="Value">The measured value, projected to <see cref="double"/>.</param>
+/// <param name="Value">
+/// The measured value, projected to <see cref="double"/> for uniform querying. <see cref="double"/>
+/// represents integers exactly only up to 2^53 and cannot represent every decimal exactly, so an
+/// exact-equality assertion on a very large <see langword="long"/> counter or a <see langword="decimal"/>
+/// (for example money-as-metric) histogram can surprise; prefer the tolerance-based sample assertions for
+/// non-integer values.
+/// </param>
 /// <param name="Tags">The tags attached to the measurement (empty when none).</param>
 /// <param name="Timestamp">The time the measurement was collected (from the capturing collector's clock).</param>
 public sealed record CapturedMeasurement(

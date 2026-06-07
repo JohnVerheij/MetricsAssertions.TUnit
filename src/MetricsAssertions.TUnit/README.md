@@ -10,11 +10,15 @@ TUnit-native fluent assertions over `System.Diagnostics.Metrics` instruments, bu
 
 ## What ships
 
-| Entry point | Behavior |
-|---|---|
-| `Assert.That(capture).HasMeasurementCount(n)` | Asserts exactly `n` measurements were captured. |
+Fluent `Assert.That(...).Has*` assertions over three receivers:
 
-The framework-agnostic core (`MetricsAssertions`) ships `InstrumentCapture.Of<T>(Instrument<T>)` to capture a referenceable instrument's measurements, the `Measurements` projected snapshot, `Count`, and the `CapturedMeasurement` record (instrument name, value projected to `double`, tags, timestamp). The full surface (meter-wide capture, counter totals, tag and delta queries, and more assertions) lands in 0.1.0.
+| Receiver | Assertions |
+|---|---|
+| `InstrumentCapture` | counter / up-down-counter totals, measurement count, emptiness, last value, tag presence |
+| `MeasurementSet` | totals, counts, histogram sum / average / range, exact and order-insensitive samples, tag-consistency |
+| `MeterCapture` | per-instrument totals, counts, and tag presence by name |
+
+The framework-agnostic core (`MetricsAssertions`) ships the `InstrumentCapture` / `MeterCapture` capture types, the queryable `MeasurementSet`, `MeterInspector`, and the `CapturedMeasurement` record (instrument name, value projected to `double`, tags, timestamp).
 
 ## Install
 
