@@ -91,9 +91,10 @@ var placed = meter.CreateCounter<long>("orders.placed");
 // Capture the instrument's measurements for the duration of a test.
 using var capture = InstrumentCapture.Of(placed);
 
-placed.Add(1);
-placed.Add(1);
+placed.Add(2);
+placed.Add(3);
 
+await Assert.That(capture).HasCounterTotal(5);
 await Assert.That(capture).HasMeasurementCount(2);
 ```
 
@@ -177,6 +178,10 @@ Capture is built on the first-party `MetricCollector<T>` from `Microsoft.Extensi
 ### Values are projected to `double`
 
 Every measurement's value is projected to `double` (via `Convert.ToDouble`) so heterogeneous instrument types share one query and assertion surface. `double` represents integers exactly only up to 2^53 and cannot represent every decimal exactly, so an exact-equality assertion on a very large `long` counter, or on a `decimal` (for example money-as-metric) histogram, can surprise. For counts and durations this is a non-issue; for non-integer values, prefer the tolerance-based `HasSampleSum` / `HasSampleAverage` assertions, which take an explicit tolerance.
+
+### Assertions are kind-named, not kind-checked
+
+The capture is typed by the instrument's value type (`T`), not its kind, and every value is projected to `double`, so the assertion surface is uniform across counters, histograms, and gauges. The kind-named terminators (`HasCounterTotal`, `HasSampleSum`, `HasLastValue`) signal intent but do not enforce it: calling `HasSampleSum` on a counter capture, or `HasCounterTotal` on a histogram, computes a defined but meaningless number rather than refusing to apply. Metric tests are normally written by whoever created the instrument, so this is a deliberate simplicity-over-safety tradeoff; enforcing kind end to end (a capture that remembers its instrument kind) is a post-1.0 consideration.
 
 ## Stability intent (pre-1.0)
 
