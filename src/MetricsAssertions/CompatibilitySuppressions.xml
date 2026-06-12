@@ -2,113 +2,22 @@
 <!-- https://learn.microsoft.com/dotnet/fundamentals/package-validation/diagnostic-ids -->
 <Suppressions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Suppression>
-    <DiagnosticId>CP0001</DiagnosticId>
-    <Target>T:MetricsAssertions.MeasurementBaseline</Target>
-    <Left>lib/net10.0/MetricsAssertions.dll</Left>
-    <Right>lib/net10.0/MetricsAssertions.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0001</DiagnosticId>
-    <Target>T:MetricsAssertions.MeasurementSet</Target>
-    <Left>lib/net10.0/MetricsAssertions.dll</Left>
-    <Right>lib/net10.0/MetricsAssertions.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0001</DiagnosticId>
-    <Target>T:MetricsAssertions.MeterCapture</Target>
-    <Left>lib/net10.0/MetricsAssertions.dll</Left>
-    <Right>lib/net10.0/MetricsAssertions.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0001</DiagnosticId>
-    <Target>T:MetricsAssertions.MeterInspector</Target>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.InstrumentCapture.OfName``1(System.Object,System.String,System.String,System.TimeProvider)</Target>
     <Left>lib/net10.0/MetricsAssertions.dll</Left>
     <Right>lib/net10.0/MetricsAssertions.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.InstrumentCapture.get_LastValue</Target>
-    <Left>lib/net10.0/MetricsAssertions.dll</Left>
-    <Right>lib/net10.0/MetricsAssertions.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.InstrumentCapture.get_Measurements</Target>
-    <Left>lib/net10.0/MetricsAssertions.dll</Left>
-    <Right>lib/net10.0/MetricsAssertions.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.InstrumentCapture.get_Total</Target>
-    <Left>lib/net10.0/MetricsAssertions.dll</Left>
-    <Right>lib/net10.0/MetricsAssertions.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.InstrumentCapture.HasMeasurementTagged(System.String,System.Object)</Target>
-    <Left>lib/net10.0/MetricsAssertions.dll</Left>
-    <Right>lib/net10.0/MetricsAssertions.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.InstrumentCapture.OfName``1(System.String,System.String,System.TimeProvider)</Target>
-    <Left>lib/net10.0/MetricsAssertions.dll</Left>
-    <Right>lib/net10.0/MetricsAssertions.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.InstrumentCapture.OfObservable``1(System.Diagnostics.Metrics.ObservableInstrument{``0},System.TimeProvider)</Target>
-    <Left>lib/net10.0/MetricsAssertions.dll</Left>
-    <Right>lib/net10.0/MetricsAssertions.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.InstrumentCapture.RecordObservable</Target>
-    <Left>lib/net10.0/MetricsAssertions.dll</Left>
-    <Right>lib/net10.0/MetricsAssertions.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.InstrumentCapture.Since(MetricsAssertions.MeasurementBaseline)</Target>
-    <Left>lib/net10.0/MetricsAssertions.dll</Left>
-    <Right>lib/net10.0/MetricsAssertions.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.InstrumentCapture.Snapshot</Target>
-    <Left>lib/net10.0/MetricsAssertions.dll</Left>
-    <Right>lib/net10.0/MetricsAssertions.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.InstrumentCapture.Tagged(System.String,System.Object)</Target>
-    <Left>lib/net10.0/MetricsAssertions.dll</Left>
-    <Right>lib/net10.0/MetricsAssertions.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.InstrumentCapture.WaitForAsync(System.Int32,System.Threading.CancellationToken)</Target>
+    <Target>M:MetricsAssertions.MeterCapture.For(System.String,System.Object)</Target>
     <Left>lib/net10.0/MetricsAssertions.dll</Left>
     <Right>lib/net10.0/MetricsAssertions.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0003</DiagnosticId>
-    <Target>MetricsAssertions, Version=0.0.1.0, Culture=neutral, PublicKeyToken=null</Target>
+    <Target>MetricsAssertions, Version=0.1.0.0, Culture=neutral, PublicKeyToken=null</Target>
     <Left>lib/net10.0/MetricsAssertions.dll</Left>
     <Right>lib/net10.0/MetricsAssertions.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>

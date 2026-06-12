@@ -40,6 +40,25 @@ internal sealed class InstrumentCaptureTests
     }
 
     [Test]
+    public async Task OfName_WithMeterScope_CapturesScopedMeterThatNullScopeMisses(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        // A meter created with a scope is what IMeterFactory (the ASP.NET Core DI path) produces.
+        var scope = new object();
+        using var meter = new Meter(new MeterOptions("MetricsAssertions.Tests.Scoped") { Scope = scope });
+        var counter = meter.CreateCounter<long>("hits");
+
+        using var unscoped = InstrumentCapture.OfName<long>("MetricsAssertions.Tests.Scoped", "hits");
+        using var scoped = InstrumentCapture.OfName<long>(scope, "MetricsAssertions.Tests.Scoped", "hits");
+        counter.Add(7);
+
+        // The no-scope overload silently captures nothing from a scoped meter; the scope-aware one works.
+        await Assert.That(unscoped.Count).IsEqualTo(0);
+        await Assert.That(scoped.Count).IsEqualTo(1);
+        await Assert.That(scoped.Total).IsEqualTo(7L);
+    }
+
+    [Test]
     public async Task OfName_CapturesByMeterAndInstrumentName(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();

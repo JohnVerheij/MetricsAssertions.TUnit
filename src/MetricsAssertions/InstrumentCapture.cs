@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 
 namespace MetricsAssertions;
@@ -16,7 +16,7 @@ namespace MetricsAssertions;
 /// instruments share one assertion vocabulary and bundle into a <see cref="MeterCapture"/>.
 /// <para>
 /// Construct via <see cref="Of{T}(Instrument{T}, TimeProvider?)"/> (when the instrument is referenceable),
-/// <see cref="OfObservable{T}"/>, or <see cref="OfName{T}"/> (by meter + instrument name - the primitive
+/// <see cref="OfObservable{T}"/>, or <see cref="OfName{T}(string, string, TimeProvider?)"/> (by meter + instrument name - the primitive
 /// attaches even to a plain static <see cref="Meter"/>). For observable instruments, call
 /// <see cref="RecordObservable"/> before reading. Dispose to release.
 /// </para>
@@ -68,14 +68,34 @@ public sealed class InstrumentCapture : IDisposable
 
     /// <summary>
     /// Captures the instrument named <paramref name="instrumentName"/> on the meter named
-    /// <paramref name="meterName"/> (no instrument reference required).
+    /// <paramref name="meterName"/> (no instrument reference required). The meter is matched with no
+    /// scope, so this captures a meter created directly (<c>new Meter(name)</c>) but not one created by
+    /// an <see cref="System.Diagnostics.Metrics.IMeterFactory"/> (whose meters carry a scope). For the
+    /// DI path, use <see cref="OfName{T}(object?, string, string, TimeProvider?)"/>.
     /// </summary>
     /// <typeparam name="T">The instrument's value type.</typeparam>
     /// <param name="meterName">The meter name.</param>
     /// <param name="instrumentName">The instrument name.</param>
     /// <param name="timeProvider">An optional clock for measurement timestamps and waits.</param>
     public static InstrumentCapture OfName<T>(string meterName, string instrumentName, TimeProvider? timeProvider = null) where T : struct
-        => Wrap(instrumentName, new MetricCollector<T>(meterScope: null, meterName, instrumentName, timeProvider));
+        => OfName<T>(meterScope: null, meterName, instrumentName, timeProvider);
+
+    /// <summary>
+    /// Captures the instrument named <paramref name="instrumentName"/> on the meter named
+    /// <paramref name="meterName"/> whose <see cref="System.Diagnostics.Metrics.Meter.Scope"/> equals
+    /// <paramref name="meterScope"/>. A meter created by an
+    /// <see cref="System.Diagnostics.Metrics.IMeterFactory"/> carries the factory as its scope (the
+    /// standard ASP.NET Core DI metrics path), so pass that factory here; a null scope only matches a
+    /// meter created directly and would silently capture nothing from a factory-created meter.
+    /// </summary>
+    /// <typeparam name="T">The instrument's value type.</typeparam>
+    /// <param name="meterScope">The meter scope to match: the <c>IMeterFactory</c> instance for a
+    /// DI-created meter, or null for a meter created directly.</param>
+    /// <param name="meterName">The meter name.</param>
+    /// <param name="instrumentName">The instrument name.</param>
+    /// <param name="timeProvider">An optional clock for measurement timestamps and waits.</param>
+    public static InstrumentCapture OfName<T>(object? meterScope, string meterName, string instrumentName, TimeProvider? timeProvider = null) where T : struct
+        => Wrap(instrumentName, new MetricCollector<T>(meterScope, meterName, instrumentName, timeProvider));
 
     private static InstrumentCapture Wrap<T>(string name, MetricCollector<T> collector) where T : struct
         => new(

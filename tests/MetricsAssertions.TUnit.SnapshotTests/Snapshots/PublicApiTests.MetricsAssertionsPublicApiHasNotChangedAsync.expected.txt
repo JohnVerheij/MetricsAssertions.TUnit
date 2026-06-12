@@ -30,6 +30,8 @@ namespace MetricsAssertions
             where T :  struct { }
         public static MetricsAssertions.InstrumentCapture OfName<T>(string meterName, string instrumentName, System.TimeProvider? timeProvider = null)
             where T :  struct { }
+        public static MetricsAssertions.InstrumentCapture OfName<T>(object? meterScope, string meterName, string instrumentName, System.TimeProvider? timeProvider = null)
+            where T :  struct { }
         public static MetricsAssertions.InstrumentCapture OfObservable<T>(System.Diagnostics.Metrics.ObservableInstrument<T> instrument, System.TimeProvider? timeProvider = null)
             where T :  struct { }
     }
@@ -80,6 +82,7 @@ namespace MetricsAssertions
         public void RecordObservable() { }
         public System.Collections.Generic.IReadOnlyList<double> Samples(string instrumentName) { }
         public static MetricsAssertions.MeterCapture For(string meterName) { }
+        public static MetricsAssertions.MeterCapture For(string meterName, object? meterScope) { }
     }
     public static class MeterInspector
     {

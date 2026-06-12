@@ -11,7 +11,7 @@
     <IsPackable>true</IsPackable>
     <PackageId>MetricsAssertions</PackageId>
     <ProductName>MetricsAssertions</ProductName>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>John Verheij</Authors>
     <Copyright>Copyright (c) 2026 John Verheij</Copyright>
     <Description>Framework-agnostic core for fluent metric-measurement assertions over System.Diagnostics.Metrics instruments in .NET test projects, built on the first-party MetricCollector testing primitive. Captures the measurements an instrument records into a disposable, per-test InstrumentCapture and projects them to a uniform CapturedMeasurement shape. Foundation release: meter-wide capture, observable and by-name capture, tag and delta queries, and the broader fluent assertions land in 0.1.0. Test-framework assertion entry points live in adapter packages (MetricsAssertions.TUnit). AOT-compatible, trimmable, no runtime reflection.</Description>
@@ -35,7 +35,7 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <!-- ApiCompat baseline: pins to the previous shipped version so binary breaks are caught at pack time. -->
-    <PackageValidationBaselineVersion>0.0.1</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>0.1.0</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
     <EnableStrictModeForCompatibleFrameworksInPackage>true</EnableStrictModeForCompatibleFrameworksInPackage>
     <EnableStrictModeForBaselineValidation>true</EnableStrictModeForBaselineValidation>
