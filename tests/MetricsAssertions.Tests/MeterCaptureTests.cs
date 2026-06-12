@@ -37,6 +37,26 @@ internal sealed class MeterCaptureTests
     }
 
     [Test]
+    public async Task Add_Instrument_ChecksMeterScope(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        // Scope is part of the bundle's identity, so the by-reference Add must reject an instrument
+        // whose meter shares the name but has a different scope, and accept a matching-scope one.
+        var scope = new object();
+        using var scoped = new Meter(new MeterOptions("MetricsAssertions.Tests.ScopeGuard") { Scope = scope });
+        using var otherScope = new Meter(new MeterOptions("MetricsAssertions.Tests.ScopeGuard") { Scope = new object() });
+        var matching = scoped.CreateCounter<long>("hits");
+        var mismatched = otherScope.CreateCounter<long>("hits");
+
+        using var capture = MeterCapture.For("MetricsAssertions.Tests.ScopeGuard", scope);
+        await Assert.That(() => capture.Add(mismatched)).Throws<ArgumentException>();
+
+        capture.Add(matching);
+        matching.Add(3);
+        await Assert.That(capture.CounterTotal("hits")).IsEqualTo(3L);
+    }
+
+    [Test]
     public async Task Bundle_CapturesAcrossInstruments(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();

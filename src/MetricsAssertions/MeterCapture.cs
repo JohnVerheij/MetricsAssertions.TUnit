@@ -68,9 +68,10 @@ public sealed class MeterCapture : IDisposable
     public MeterCapture Add<T>(Instrument<T> instrument, TimeProvider? timeProvider = null) where T : struct
     {
         ArgumentNullException.ThrowIfNull(instrument);
-        if (!string.Equals(instrument.Meter.Name, MeterName, StringComparison.Ordinal))
+        if (!string.Equals(instrument.Meter.Name, MeterName, StringComparison.Ordinal)
+            || !Equals(instrument.Meter.Scope, _meterScope))
             throw new ArgumentException(
-                $"Instrument '{instrument.Name}' belongs to meter '{instrument.Meter.Name}', not '{MeterName}'.",
+                $"Instrument '{instrument.Name}' belongs to meter '{instrument.Meter.Name}', not the captured meter '{MeterName}' with the matching scope; the meter name and scope must both match.",
                 nameof(instrument));
         Replace(instrument.Name, InstrumentCapture.Of(instrument, timeProvider));
         return this;

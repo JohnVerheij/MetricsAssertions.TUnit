@@ -13,7 +13,7 @@ Minor release. Adds scope-aware capture so a meter created by an `IMeterFactory`
 
 ### Added
 
-- **`InstrumentCapture.OfName<T>(object? meterScope, string meterName, string instrumentName, TimeProvider?)`** and **`MeterCapture.For(string meterName, object? meterScope)`** capture an instrument on a meter whose `Meter.Scope` equals `meterScope`. A meter created by an `IMeterFactory` carries the factory as its scope, so pass that factory to capture it; the existing no-scope overloads match only a meter created directly (`new Meter(name)`) and silently capture nothing from a factory-created one. The no-scope overloads now delegate to the scope-aware ones with a null scope, so existing behavior is unchanged.
+- **`InstrumentCapture.OfName<T>(object? meterScope, string meterName, string instrumentName, TimeProvider?)`** and **`MeterCapture.For(string meterName, object? meterScope)`** capture an instrument on a meter whose `Meter.Scope` equals `meterScope`. A meter created by an `IMeterFactory` carries the factory as its scope, so pass that factory to capture it; the existing no-scope overloads match only a meter created directly (`new Meter(name)`) and silently capture nothing from a factory-created one. The no-scope overloads now delegate to the scope-aware ones with a null scope, so existing behavior is unchanged. The by-reference `MeterCapture.Add(Instrument<T>)` now also requires the instrument's meter scope to match the bundle's scope (it already required the meter name to match), so an instrument from a same-named but differently-scoped meter is rejected.
 
 ### Changed
 
