@@ -21,6 +21,22 @@ internal sealed class MeterCaptureTests
     private static readonly double[] LatencySamples = [50d];
 
     [Test]
+    public async Task For_WithMeterScope_CapturesScopedMeter(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        // A scoped meter is what IMeterFactory (the ASP.NET Core DI path) produces; For(name, scope)
+        // captures it, where the default For(name) (no scope) would capture nothing.
+        var scope = new object();
+        using var meter = new Meter(new MeterOptions("MetricsAssertions.Tests.MeterScoped") { Scope = scope });
+        var counter = meter.CreateCounter<long>("hits");
+
+        using var capture = MeterCapture.For("MetricsAssertions.Tests.MeterScoped", scope).Add<long>("hits");
+        counter.Add(4);
+
+        await Assert.That(capture.CounterTotal("hits")).IsEqualTo(4L);
+    }
+
+    [Test]
     public async Task Bundle_CapturesAcrossInstruments(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();

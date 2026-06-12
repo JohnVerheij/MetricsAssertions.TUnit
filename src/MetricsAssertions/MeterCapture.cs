@@ -12,7 +12,7 @@ namespace MetricsAssertions;
 /// for a known instrument set - strongly typed at construction, uniform to query and assert - for tests
 /// that need to assert across several instruments of one meter at once (e.g. an observable-gauge scrape).
 /// <para>
-/// Build with <see cref="For"/> + <c>Add*</c>; query per instrument via the indexer or
+/// Build with <see cref="For(string)"/> + <c>Add*</c>; query per instrument via the indexer or
 /// <see cref="CounterTotal"/> / <see cref="Samples"/> / <see cref="MeasurementCount"/>, or across all via
 /// <see cref="Measurements"/>. Call <see cref="RecordObservable"/> before reading observable gauges.
 /// </para>
@@ -20,21 +20,34 @@ namespace MetricsAssertions;
 public sealed class MeterCapture : IDisposable
 {
     private readonly Dictionary<string, InstrumentCapture> _instruments = new(StringComparer.Ordinal);
+    private readonly object? _meterScope;
 
     /// <summary>Gets the meter name this capture is scoped to.</summary>
     public string MeterName { get; }
 
-    private MeterCapture(string meterName)
+    private MeterCapture(string meterName, object? meterScope)
     {
         MeterName = meterName;
+        _meterScope = meterScope;
     }
 
-    /// <summary>Begins building a capture for the meter named <paramref name="meterName"/>.</summary>
+    /// <summary>Begins building a capture for the meter named <paramref name="meterName"/> created
+    /// directly (<c>new Meter(name)</c>, no scope). For a meter created by an
+    /// <see cref="System.Diagnostics.Metrics.IMeterFactory"/>, use <see cref="For(string, object?)"/>.</summary>
     /// <param name="meterName">The meter name to capture.</param>
     public static MeterCapture For(string meterName)
+        => For(meterName, meterScope: null);
+
+    /// <summary>Begins building a capture for the meter named <paramref name="meterName"/> whose
+    /// <see cref="System.Diagnostics.Metrics.Meter.Scope"/> equals <paramref name="meterScope"/>. Pass the
+    /// <see cref="System.Diagnostics.Metrics.IMeterFactory"/> instance for a DI-created meter; a null scope
+    /// only matches a directly-created meter and would capture nothing from a factory-created one.</summary>
+    /// <param name="meterName">The meter name to capture.</param>
+    /// <param name="meterScope">The meter scope to match (the <c>IMeterFactory</c> instance, or null).</param>
+    public static MeterCapture For(string meterName, object? meterScope)
     {
         ArgumentNullException.ThrowIfNull(meterName);
-        return new MeterCapture(meterName);
+        return new MeterCapture(meterName, meterScope);
     }
 
     /// <summary>Adds the named instrument (typically a counter / up-down counter / histogram) to the bundle.</summary>
@@ -44,7 +57,7 @@ public sealed class MeterCapture : IDisposable
     public MeterCapture Add<T>(string instrumentName, TimeProvider? timeProvider = null) where T : struct
     {
         ArgumentNullException.ThrowIfNull(instrumentName);
-        Replace(instrumentName, InstrumentCapture.OfName<T>(MeterName, instrumentName, timeProvider));
+        Replace(instrumentName, InstrumentCapture.OfName<T>(_meterScope, MeterName, instrumentName, timeProvider));
         return this;
     }
 

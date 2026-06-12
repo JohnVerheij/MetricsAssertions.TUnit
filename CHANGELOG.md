@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-12: capture meters created by an IMeterFactory
+
+Minor release. Adds scope-aware capture so a meter created by an `IMeterFactory` (the standard ASP.NET Core DI metrics path) can be captured by name. Purely additive.
+
+### Added
+
+- **`InstrumentCapture.OfName<T>(object? meterScope, string meterName, string instrumentName, TimeProvider?)`** and **`MeterCapture.For(string meterName, object? meterScope)`** capture an instrument on a meter whose `Meter.Scope` equals `meterScope`. A meter created by an `IMeterFactory` carries the factory as its scope, so pass that factory to capture it; the existing no-scope overloads match only a meter created directly (`new Meter(name)`) and silently capture nothing from a factory-created one. The no-scope overloads now delegate to the scope-aware ones with a null scope, so existing behavior is unchanged.
+
+### Changed
+
+- Bumped `PackageValidationBaselineVersion` from `0.0.1` to `0.1.0` on both packages so ApiCompat strict-mode validates `0.2.0` against the most recently published baseline. The new overloads are recorded as additive differences in `CompatibilitySuppressions.xml`.
+
 ## [0.1.0] - 2026-06-07: full assertion surface
 
 The full surface: a queryable `MeasurementSet`, multi-instrument `MeterCapture`, meter-introspection

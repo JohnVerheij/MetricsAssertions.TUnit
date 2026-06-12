@@ -139,6 +139,7 @@ The `MetricsAssertions` core exposes the capture and query surface for reading m
 | Member | Description |
 |---|---|
 | `InstrumentCapture.Of<T>` / `OfObservable<T>` / `OfName<T>` | Captures a referenceable, observable, or by-name instrument via `MetricCollector<T>`. |
+| `InstrumentCapture.OfName<T>(meterScope, ...)` / `MeterCapture.For(name, meterScope)` *(v0.2.0+)* | Capture a meter created by an `IMeterFactory` (the ASP.NET Core DI metrics path): pass the factory as `meterScope`. The no-scope overloads match only a directly-created meter (`new Meter(name)`) and would capture nothing from a factory-created one. |
 | `InstrumentCapture.Measurements` | The captured measurements as a queryable `MeasurementSet`. |
 | `InstrumentCapture.Total` / `Count` / `LastValue` / `Tagged` / `HasMeasurementTagged` | Convenience reads over the capture. |
 | `InstrumentCapture.Snapshot` / `Since` | Take a `MeasurementBaseline` and query only the measurements recorded after it (an action's delta). |
