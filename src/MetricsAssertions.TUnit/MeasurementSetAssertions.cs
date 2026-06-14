@@ -169,6 +169,29 @@ public static class MeasurementSetAssertions
                 "the set to have samples [", Fmt(expected), "] in order\n  but it had [", Fmt(value.Values), "]"));
     }
 
+    /// <summary>Asserts the samples equal <paramref name="expected"/> in order, each within
+    /// <paramref name="tolerance"/> (absolute), the tolerant counterpart of
+    /// <see cref="HasSamples(MeasurementSet, double[])"/> for samples fed computed doubles.</summary>
+    /// <param name="value">The measurement set.</param>
+    /// <param name="expected">The expected samples, in order.</param>
+    /// <param name="tolerance">The allowed absolute difference per sample.</param>
+    /// <returns>A passing assertion when the samples match in order within tolerance; otherwise a failing one.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> or <paramref name="expected"/> is
+    /// <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> is negative or non-finite.</exception>
+    [GenerateAssertion]
+    public static AssertionResult HasSamples(this MeasurementSet value, IReadOnlyList<double> expected, double tolerance)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(expected);
+        ValidateTolerance(tolerance);
+        return value.SamplesEqual(expected, tolerance)
+            ? AssertionResult.Passed
+            : MeasurementDiagnostics.Failed(value, string.Concat(
+                "the set to have samples [", Fmt(expected), "] in order within ", Num(tolerance),
+                "\n  but it had [", Fmt(value.Values), "]"));
+    }
+
     /// <summary>Asserts the samples equal <paramref name="expected"/> regardless of order.</summary>
     /// <param name="value">The measurement set.</param>
     /// <param name="expected">The expected samples, in any order.</param>
@@ -184,6 +207,29 @@ public static class MeasurementSetAssertions
             ? AssertionResult.Passed
             : MeasurementDiagnostics.Failed(value, string.Concat(
                 "the set to have samples [", Fmt(expected), "] in any order\n  but it had [", Fmt(value.Values), "]"));
+    }
+
+    /// <summary>Asserts the samples equal <paramref name="expected"/> regardless of order, each within
+    /// <paramref name="tolerance"/> (absolute), the tolerant counterpart of
+    /// <see cref="HasSamplesInAnyOrder(MeasurementSet, double[])"/> for samples fed computed doubles.</summary>
+    /// <param name="value">The measurement set.</param>
+    /// <param name="expected">The expected samples, in any order.</param>
+    /// <param name="tolerance">The allowed absolute difference per sample.</param>
+    /// <returns>A passing assertion when the samples match in any order within tolerance; otherwise a failing one.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> or <paramref name="expected"/> is
+    /// <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> is negative or non-finite.</exception>
+    [GenerateAssertion]
+    public static AssertionResult HasSamplesInAnyOrder(this MeasurementSet value, IReadOnlyList<double> expected, double tolerance)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(expected);
+        ValidateTolerance(tolerance);
+        return value.SamplesEquivalentTo(expected, tolerance)
+            ? AssertionResult.Passed
+            : MeasurementDiagnostics.Failed(value, string.Concat(
+                "the set to have samples [", Fmt(expected), "] in any order within ", Num(tolerance),
+                "\n  but it had [", Fmt(value.Values), "]"));
     }
 
     /// <summary>Asserts every measurement carries a tag with key <paramref name="tagKey"/>.</summary>

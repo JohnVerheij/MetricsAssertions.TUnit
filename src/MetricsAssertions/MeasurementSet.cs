@@ -40,6 +40,10 @@ public sealed class MeasurementSet
     public IReadOnlyList<double> Values => [.. All.Select(m => m.Value)];
 
     /// <summary>Gets the net total of all values as a <see cref="long"/> (a counter / up-down-counter total).</summary>
+    /// <remarks>The sum is rounded to the nearest <see cref="long"/> using banker's rounding
+    /// (round half to even), so a <c>Counter&lt;double&gt;</c> whose values sum to a fractional total is
+    /// evaluated as an integer. For an exact fractional total compare <see cref="Sum"/> directly, or use
+    /// the histogram aggregate <c>HasSampleSum(expected, tolerance)</c> on the measurement set.</remarks>
     public long Total => Convert.ToInt64(Sum);
 
     /// <summary>Gets the sum of all values (0 when empty).</summary>
@@ -79,12 +83,47 @@ public sealed class MeasurementSet
         return Values.SequenceEqual(expected);
     }
 
+    /// <summary>Returns whether the values equal <paramref name="expected"/> in order, each within
+    /// <paramref name="tolerance"/> (absolute).</summary>
+    /// <param name="expected">The expected samples, in order.</param>
+    /// <param name="tolerance">The allowed absolute difference per sample.</param>
+    public bool SamplesEqual(IReadOnlyList<double> expected, double tolerance)
+    {
+        ArgumentNullException.ThrowIfNull(expected);
+        var values = Values;
+        if (values.Count != expected.Count)
+            return false;
+        for (int i = 0; i < values.Count; i++)
+            if (Math.Abs(values[i] - expected[i]) > tolerance)
+                return false;
+        return true;
+    }
+
     /// <summary>Returns whether the values equal <paramref name="expected"/> regardless of order.</summary>
     /// <param name="expected">The expected samples, in any order.</param>
     public bool SamplesEquivalentTo(params double[] expected)
     {
         ArgumentNullException.ThrowIfNull(expected);
         return Values.Order().SequenceEqual(expected.Order());
+    }
+
+    /// <summary>Returns whether the values equal <paramref name="expected"/> regardless of order, each
+    /// within <paramref name="tolerance"/> (absolute). Both sequences are sorted and compared
+    /// element by element, so equal counts and pairwise-within-tolerance values match.</summary>
+    /// <param name="expected">The expected samples, in any order.</param>
+    /// <param name="tolerance">The allowed absolute difference per sample.</param>
+    public bool SamplesEquivalentTo(IReadOnlyList<double> expected, double tolerance)
+    {
+        ArgumentNullException.ThrowIfNull(expected);
+        var values = Values;
+        if (values.Count != expected.Count)
+            return false;
+        var sortedActual = values.Order().ToArray();
+        var sortedExpected = expected.Order().ToArray();
+        for (int i = 0; i < sortedActual.Length; i++)
+            if (Math.Abs(sortedActual[i] - sortedExpected[i]) > tolerance)
+                return false;
+        return true;
     }
 
     /// <summary>Returns the subset emitted by the named instrument.</summary>

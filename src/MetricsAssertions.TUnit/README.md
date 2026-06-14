@@ -14,8 +14,8 @@ Fluent `Assert.That(...).Has*` assertions over three receivers:
 
 | Receiver | Assertions |
 |---|---|
-| `InstrumentCapture` | counter / up-down-counter totals, measurement count, emptiness, last value, tag presence |
-| `MeasurementSet` | totals, counts, histogram sum / average / range, exact and order-insensitive samples, tag-consistency |
+| `InstrumentCapture` | counter / up-down-counter totals, measurement count, emptiness, last value (exact or within tolerance), tag presence |
+| `MeasurementSet` | totals, counts, histogram sum / average / range, exact, tolerant, and order-insensitive samples, tag-consistency |
 | `MeterCapture` | per-instrument totals, counts, and tag presence by name |
 
 The framework-agnostic core (`MetricsAssertions`) ships the `InstrumentCapture` / `MeterCapture` capture types, the queryable `MeasurementSet`, `MeterInspector`, and the `CapturedMeasurement` record (instrument name, value projected to `double`, tags, timestamp). The by-name captures (`InstrumentCapture.OfName`, `MeterCapture.For`) take an optional meter scope (v0.2.0+) so a meter created by an `IMeterFactory` (the ASP.NET Core DI metrics path) can be captured.

@@ -13,6 +13,8 @@ namespace MetricsAssertions.TUnit
         [TUnit.Assertions.Attributes.GenerateAssertion]
         public static TUnit.Assertions.Core.AssertionResult HasLastValue(this MetricsAssertions.InstrumentCapture value, double expected) { }
         [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasLastValue(this MetricsAssertions.InstrumentCapture value, double expected, double tolerance) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
         public static TUnit.Assertions.Core.AssertionResult HasMeasurementCount(this MetricsAssertions.InstrumentCapture value, int expected) { }
         [TUnit.Assertions.Attributes.GenerateAssertion]
         public static TUnit.Assertions.Core.AssertionResult HasNoMeasurements(this MetricsAssertions.InstrumentCapture value) { }
@@ -42,7 +44,11 @@ namespace MetricsAssertions.TUnit
         [TUnit.Assertions.Attributes.GenerateAssertion]
         public static TUnit.Assertions.Core.AssertionResult HasSamples(this MetricsAssertions.MeasurementSet value, params double[] expected) { }
         [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasSamples(this MetricsAssertions.MeasurementSet value, System.Collections.Generic.IReadOnlyList<double> expected, double tolerance) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
         public static TUnit.Assertions.Core.AssertionResult HasSamplesInAnyOrder(this MetricsAssertions.MeasurementSet value, params double[] expected) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion]
+        public static TUnit.Assertions.Core.AssertionResult HasSamplesInAnyOrder(this MetricsAssertions.MeasurementSet value, System.Collections.Generic.IReadOnlyList<double> expected, double tolerance) { }
         [TUnit.Assertions.Attributes.GenerateAssertion]
         public static TUnit.Assertions.Core.AssertionResult HasTaggedMeasurement(this MetricsAssertions.MeasurementSet value, string tagKey, object? tagValue) { }
     }
@@ -65,6 +71,7 @@ namespace TUnit.Assertions.Extensions
         public static TUnit.Assertions.Extensions.InstrumentCapture_HasCounterTotal_Long_Assertion HasCounterTotal(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, long expected, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
         public static TUnit.Assertions.Extensions.InstrumentCapture_HasCounterTotalAtLeast_Long_Assertion HasCounterTotalAtLeast(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, long expected, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
         public static TUnit.Assertions.Extensions.InstrumentCapture_HasLastValue_Double_Assertion HasLastValue(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, double expected, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
+        public static TUnit.Assertions.Extensions.InstrumentCapture_HasLastValue_Double_Double_Assertion HasLastValue(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, double expected, double tolerance, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tolerance")] string? toleranceExpression = null) { }
         public static TUnit.Assertions.Extensions.InstrumentCapture_HasMeasurementCount_Int_Assertion HasMeasurementCount(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, int expected, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
         public static TUnit.Assertions.Extensions.InstrumentCapture_HasNoMeasurements_Assertion HasNoMeasurements(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source) { }
         public static TUnit.Assertions.Extensions.InstrumentCapture_HasTaggedMeasurement_String_Object_Assertion HasTaggedMeasurement(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, string tagKey, object? tagValue, [System.Runtime.CompilerServices.CallerArgumentExpression("tagKey")] string? tagKeyExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tagValue")] string? tagValueExpression = null) { }
@@ -85,6 +92,12 @@ namespace TUnit.Assertions.Extensions
     public sealed class InstrumentCapture_HasLastValue_Double_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.InstrumentCapture>
     {
         public InstrumentCapture_HasLastValue_Double_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.InstrumentCapture> context, double expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.InstrumentCapture> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class InstrumentCapture_HasLastValue_Double_Double_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.InstrumentCapture>
+    {
+        public InstrumentCapture_HasLastValue_Double_Double_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.InstrumentCapture> context, double expected, double tolerance) { }
         protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.InstrumentCapture> metadata) { }
         protected override string GetExpectation() { }
     }
@@ -123,7 +136,9 @@ namespace TUnit.Assertions.Extensions
         public static TUnit.Assertions.Extensions.MeasurementSet_HasSampleAverage_Double_Double_Assertion HasSampleAverage(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, double expected, double tolerance = 0, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tolerance")] string? toleranceExpression = null) { }
         public static TUnit.Assertions.Extensions.MeasurementSet_HasSampleSum_Double_Double_Assertion HasSampleSum(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, double expected, double tolerance = 0, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tolerance")] string? toleranceExpression = null) { }
         public static TUnit.Assertions.Extensions.MeasurementSet_HasSamples_DoubleArray_Assertion HasSamples(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, params double[] expected) { }
+        public static TUnit.Assertions.Extensions.MeasurementSet_HasSamples_IReadOnlyListDouble_Double_Assertion HasSamples(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, System.Collections.Generic.IReadOnlyList<double> expected, double tolerance, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tolerance")] string? toleranceExpression = null) { }
         public static TUnit.Assertions.Extensions.MeasurementSet_HasSamplesInAnyOrder_DoubleArray_Assertion HasSamplesInAnyOrder(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, params double[] expected) { }
+        public static TUnit.Assertions.Extensions.MeasurementSet_HasSamplesInAnyOrder_IReadOnlyListDouble_Double_Assertion HasSamplesInAnyOrder(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, System.Collections.Generic.IReadOnlyList<double> expected, double tolerance, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tolerance")] string? toleranceExpression = null) { }
         public static TUnit.Assertions.Extensions.MeasurementSet_HasTaggedMeasurement_String_Object_Assertion HasTaggedMeasurement(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, string tagKey, object? tagValue, [System.Runtime.CompilerServices.CallerArgumentExpression("tagKey")] string? tagKeyExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tagValue")] string? tagValueExpression = null) { }
     }
     public sealed class MeasurementSet_HasAllSamplesInRange_Double_Double_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
@@ -180,9 +195,21 @@ namespace TUnit.Assertions.Extensions
         protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
         protected override string GetExpectation() { }
     }
+    public sealed class MeasurementSet_HasSamplesInAnyOrder_IReadOnlyListDouble_Double_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
+    {
+        public MeasurementSet_HasSamplesInAnyOrder_IReadOnlyListDouble_Double_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, System.Collections.Generic.IReadOnlyList<double> expected, double tolerance) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
+        protected override string GetExpectation() { }
+    }
     public sealed class MeasurementSet_HasSamples_DoubleArray_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
     {
         public MeasurementSet_HasSamples_DoubleArray_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, double[] expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeasurementSet_HasSamples_IReadOnlyListDouble_Double_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
+    {
+        public MeasurementSet_HasSamples_IReadOnlyListDouble_Double_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, System.Collections.Generic.IReadOnlyList<double> expected, double tolerance) { }
         protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
         protected override string GetExpectation() { }
     }

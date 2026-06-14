@@ -115,6 +115,33 @@ internal sealed class MeasurementSetTests
     }
 
     [Test]
+    public async Task SamplesEqual_WithTolerance_MatchesPerSample(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        // Computed doubles: 0.1 + 0.2 is 0.30000000000000004, so exact comparison flakes.
+        var set = new MeasurementSet(new[] { M("h", 0.1 + 0.2), M("h", 1.1 + 2.2) });
+        double[] expected = [0.3, 3.3];
+
+        await Assert.That(set.SamplesEqual(expected, 1e-9)).IsTrue();
+        await Assert.That(set.SamplesEqual(expected, 0d)).IsFalse();          // exact comparison fails
+        await Assert.That(set.SamplesEqual([0.3], 1e-9)).IsFalse();           // count mismatch
+        await Assert.That(set.SamplesEqual([0.3, 99d], 1e-9)).IsFalse();      // second sample beyond tolerance
+        await Assert.That(() => set.SamplesEqual(null!, 1e-9)).Throws<ArgumentNullException>();
+    }
+
+    [Test]
+    public async Task SamplesEquivalentTo_WithTolerance_MatchesRegardlessOfOrder(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var set = new MeasurementSet(new[] { M("h", 0.1 + 0.2), M("h", 1.1 + 2.2) });
+
+        await Assert.That(set.SamplesEquivalentTo([3.3, 0.3], 1e-9)).IsTrue();
+        await Assert.That(set.SamplesEquivalentTo([0.3], 1e-9)).IsFalse();        // count mismatch
+        await Assert.That(set.SamplesEquivalentTo([0.3, 99d], 1e-9)).IsFalse();   // largest sample beyond tolerance
+        await Assert.That(() => set.SamplesEquivalentTo(null!, 1e-9)).Throws<ArgumentNullException>();
+    }
+
+    [Test]
     public async Task Describe_RendersMeasurementsAndEmptyPlaceholder(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();

@@ -2,8 +2,71 @@
 <!-- https://learn.microsoft.com/dotnet/fundamentals/package-validation/diagnostic-ids -->
 <Suppressions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:TUnit.Assertions.Extensions.InstrumentCapture_HasLastValue_Double_Double_Assertion</Target>
+    <Left>lib/net10.0/MetricsAssertions.TUnit.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.TUnit.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:TUnit.Assertions.Extensions.MeasurementSet_HasSamples_IReadOnlyListDouble_Double_Assertion</Target>
+    <Left>lib/net10.0/MetricsAssertions.TUnit.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.TUnit.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:TUnit.Assertions.Extensions.MeasurementSet_HasSamplesInAnyOrder_IReadOnlyListDouble_Double_Assertion</Target>
+    <Left>lib/net10.0/MetricsAssertions.TUnit.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.TUnit.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.TUnit.InstrumentCaptureAssertions.HasLastValue(MetricsAssertions.InstrumentCapture,System.Double,System.Double)</Target>
+    <Left>lib/net10.0/MetricsAssertions.TUnit.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.TUnit.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.TUnit.MeasurementSetAssertions.HasSamples(MetricsAssertions.MeasurementSet,System.Collections.Generic.IReadOnlyList{System.Double},System.Double)</Target>
+    <Left>lib/net10.0/MetricsAssertions.TUnit.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.TUnit.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.TUnit.MeasurementSetAssertions.HasSamplesInAnyOrder(MetricsAssertions.MeasurementSet,System.Collections.Generic.IReadOnlyList{System.Double},System.Double)</Target>
+    <Left>lib/net10.0/MetricsAssertions.TUnit.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.TUnit.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:TUnit.Assertions.Extensions.InstrumentCaptureAssertions.HasLastValue(TUnit.Assertions.Core.IAssertionSource{MetricsAssertions.InstrumentCapture},System.Double,System.Double,System.String,System.String)</Target>
+    <Left>lib/net10.0/MetricsAssertions.TUnit.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.TUnit.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:TUnit.Assertions.Extensions.MeasurementSetAssertions.HasSamples(TUnit.Assertions.Core.IAssertionSource{MetricsAssertions.MeasurementSet},System.Collections.Generic.IReadOnlyList{System.Double},System.Double,System.String,System.String)</Target>
+    <Left>lib/net10.0/MetricsAssertions.TUnit.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.TUnit.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:TUnit.Assertions.Extensions.MeasurementSetAssertions.HasSamplesInAnyOrder(TUnit.Assertions.Core.IAssertionSource{MetricsAssertions.MeasurementSet},System.Collections.Generic.IReadOnlyList{System.Double},System.Double,System.String,System.String)</Target>
+    <Left>lib/net10.0/MetricsAssertions.TUnit.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.TUnit.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
     <DiagnosticId>CP0003</DiagnosticId>
-    <Target>MetricsAssertions.TUnit, Version=0.1.0.0, Culture=neutral, PublicKeyToken=null</Target>
+    <Target>MetricsAssertions.TUnit, Version=0.2.0.0, Culture=neutral, PublicKeyToken=null</Target>
     <Left>lib/net10.0/MetricsAssertions.TUnit.dll</Left>
     <Right>lib/net10.0/MetricsAssertions.TUnit.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>

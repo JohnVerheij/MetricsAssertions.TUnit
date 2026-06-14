@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-14: tolerance overloads on the value assertions
+
+Minor release. Adds absolute-tolerance overloads to the value assertions, closing the asymmetry where the histogram aggregates (`HasSampleSum` / `HasSampleAverage`) accepted a tolerance but the value assertions compared doubles exactly. Purely additive; the `0.2.0` ApiCompat baseline is preserved.
+
+### Added
+
+- **`HasLastValue(double expected, double tolerance)`** on an `InstrumentCapture` asserts the most recent value within an absolute tolerance, the tolerant counterpart of `HasLastValue(double)` for gauges fed computed doubles (where `0.1 + 0.2 != 0.3` exact comparison flakes).
+- **`HasSamples(IReadOnlyList<double> expected, double tolerance)`** and **`HasSamplesInAnyOrder(IReadOnlyList<double> expected, double tolerance)`** on a `MeasurementSet` assert the samples within an absolute per-sample tolerance, in order and order-independent respectively. The framework-agnostic core gains the matching `MeasurementSet.SamplesEqual(expected, tolerance)` / `SamplesEquivalentTo(expected, tolerance)` comparison primitives.
+
+### Documentation
+
+- **`MeasurementSet.Total`** now documents that the sum is rounded to a `long` with banker's rounding (round half to even), so a `Counter<double>` with a fractional total is evaluated as an integer. For an exact fractional total, compare `Sum` directly or use `HasSampleSum(expected, tolerance)`.
+
 ## [0.2.0] - 2026-06-12: capture meters created by an IMeterFactory
 
 Minor release. Adds scope-aware capture so a meter created by an `IMeterFactory` (the standard ASP.NET Core DI metrics path) can be captured by name. Purely additive.
@@ -70,6 +83,8 @@ capture and a first assertion. The full surface lands in 0.1.0.
 - **`MetricsAssertions.TUnit` (adapter):** `Assert.That(capture).HasMeasurementCount(n)`, generated
   via TUnit's `[GenerateAssertion]` source generator.
 
-[unreleased]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/releases/tag/v0.0.1

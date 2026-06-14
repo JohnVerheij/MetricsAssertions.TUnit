@@ -58,7 +58,9 @@ namespace MetricsAssertions
         public bool EveryMeasurementCarriesTag(string key) { }
         public MetricsAssertions.MeasurementSet ForInstrument(string instrumentName) { }
         public bool SamplesEqual(params double[] expected) { }
+        public bool SamplesEqual(System.Collections.Generic.IReadOnlyList<double> expected, double tolerance) { }
         public bool SamplesEquivalentTo(params double[] expected) { }
+        public bool SamplesEquivalentTo(System.Collections.Generic.IReadOnlyList<double> expected, double tolerance) { }
         public MetricsAssertions.MeasurementSet Tagged([System.Runtime.CompilerServices.TupleElementNames(new string[] {
                 "Key",
                 "Value"})] params System.ValueTuple<string, object?>[] tags) { }

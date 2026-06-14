@@ -3,21 +3,21 @@
 <Suppressions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.InstrumentCapture.OfName``1(System.Object,System.String,System.String,System.TimeProvider)</Target>
+    <Target>M:MetricsAssertions.MeasurementSet.SamplesEqual(System.Collections.Generic.IReadOnlyList{System.Double},System.Double)</Target>
     <Left>lib/net10.0/MetricsAssertions.dll</Left>
     <Right>lib/net10.0/MetricsAssertions.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.MeterCapture.For(System.String,System.Object)</Target>
+    <Target>M:MetricsAssertions.MeasurementSet.SamplesEquivalentTo(System.Collections.Generic.IReadOnlyList{System.Double},System.Double)</Target>
     <Left>lib/net10.0/MetricsAssertions.dll</Left>
     <Right>lib/net10.0/MetricsAssertions.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0003</DiagnosticId>
-    <Target>MetricsAssertions, Version=0.1.0.0, Culture=neutral, PublicKeyToken=null</Target>
+    <Target>MetricsAssertions, Version=0.2.0.0, Culture=neutral, PublicKeyToken=null</Target>
     <Left>lib/net10.0/MetricsAssertions.dll</Left>
     <Right>lib/net10.0/MetricsAssertions.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
