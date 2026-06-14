@@ -142,6 +142,30 @@ internal sealed class MeasurementSetTests
     }
 
     [Test]
+    public async Task SamplesEqual_WithInvalidTolerance_Throws(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var set = new MeasurementSet(new[] { M("h", 1d) });
+
+        // A NaN tolerance would make every per-sample comparison false, so everything matches; a
+        // negative tolerance would reject even an exact match. Both fail fast instead.
+        await Assert.That(() => set.SamplesEqual([1d], double.NaN)).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(() => set.SamplesEqual([1d], -1e-9)).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(() => set.SamplesEqual([1d], double.PositiveInfinity)).Throws<ArgumentOutOfRangeException>();
+    }
+
+    [Test]
+    public async Task SamplesEquivalentTo_WithInvalidTolerance_Throws(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var set = new MeasurementSet(new[] { M("h", 1d) });
+
+        await Assert.That(() => set.SamplesEquivalentTo([1d], double.NaN)).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(() => set.SamplesEquivalentTo([1d], -1e-9)).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(() => set.SamplesEquivalentTo([1d], double.PositiveInfinity)).Throws<ArgumentOutOfRangeException>();
+    }
+
+    [Test]
     public async Task Describe_RendersMeasurementsAndEmptyPlaceholder(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();

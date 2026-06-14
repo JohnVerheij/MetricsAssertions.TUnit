@@ -7,14 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.0] - 2026-06-14: tolerance overloads on the value assertions
+## [0.3.0] - 2026-06-15: tolerance overloads on the value assertions
 
 Minor release. Adds absolute-tolerance overloads to the value assertions, closing the asymmetry where the histogram aggregates (`HasSampleSum` / `HasSampleAverage`) accepted a tolerance but the value assertions compared doubles exactly. Purely additive; the `0.2.0` ApiCompat baseline is preserved.
 
 ### Added
 
 - **`HasLastValue(double expected, double tolerance)`** on an `InstrumentCapture` asserts the most recent value within an absolute tolerance, the tolerant counterpart of `HasLastValue(double)` for gauges fed computed doubles (where `0.1 + 0.2 != 0.3` exact comparison flakes).
-- **`HasSamples(IReadOnlyList<double> expected, double tolerance)`** and **`HasSamplesInAnyOrder(IReadOnlyList<double> expected, double tolerance)`** on a `MeasurementSet` assert the samples within an absolute per-sample tolerance, in order and order-independent respectively. The framework-agnostic core gains the matching `MeasurementSet.SamplesEqual(expected, tolerance)` / `SamplesEquivalentTo(expected, tolerance)` comparison primitives.
+- **`HasSamples(IReadOnlyList<double> expected, double tolerance)`** and **`HasSamplesInAnyOrder(IReadOnlyList<double> expected, double tolerance)`** on a `MeasurementSet` assert the samples within an absolute per-sample tolerance, in order and order-independent respectively. The framework-agnostic core gains the matching `MeasurementSet.SamplesEqual(expected, tolerance)` / `SamplesEquivalentTo(expected, tolerance)` comparison primitives. Every tolerance overload rejects a non-finite or negative tolerance with `ArgumentOutOfRangeException`, so an invalid tolerance fails fast instead of silently matching everything (`NaN`) or nothing (negative).
 
 ### Documentation
 

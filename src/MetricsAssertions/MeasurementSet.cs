@@ -87,9 +87,11 @@ public sealed class MeasurementSet
     /// <paramref name="tolerance"/> (absolute).</summary>
     /// <param name="expected">The expected samples, in order.</param>
     /// <param name="tolerance">The allowed absolute difference per sample.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> is negative or non-finite.</exception>
     public bool SamplesEqual(IReadOnlyList<double> expected, double tolerance)
     {
         ArgumentNullException.ThrowIfNull(expected);
+        ValidateTolerance(tolerance);
         var values = Values;
         if (values.Count != expected.Count)
             return false;
@@ -112,9 +114,11 @@ public sealed class MeasurementSet
     /// element by element, so equal counts and pairwise-within-tolerance values match.</summary>
     /// <param name="expected">The expected samples, in any order.</param>
     /// <param name="tolerance">The allowed absolute difference per sample.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> is negative or non-finite.</exception>
     public bool SamplesEquivalentTo(IReadOnlyList<double> expected, double tolerance)
     {
         ArgumentNullException.ThrowIfNull(expected);
+        ValidateTolerance(tolerance);
         var values = Values;
         if (values.Count != expected.Count)
             return false;
@@ -124,6 +128,12 @@ public sealed class MeasurementSet
             if (Math.Abs(sortedActual[i] - sortedExpected[i]) > tolerance)
                 return false;
         return true;
+    }
+
+    private static void ValidateTolerance(double tolerance)
+    {
+        if (!double.IsFinite(tolerance) || tolerance < 0)
+            throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, "Tolerance must be a finite, non-negative number.");
     }
 
     /// <summary>Returns the subset emitted by the named instrument.</summary>
