@@ -111,7 +111,7 @@ Assertions on `Assert.That(capture)` where `capture` is an `InstrumentCapture`:
 | `HasUpDownCounterValue(n)` | The net up-down-counter value equals `n`. |
 | `HasMeasurementCount(n)` | Exactly `n` measurements were captured. |
 | `HasNoMeasurements()` | No measurements were captured. |
-| `HasLastValue(v)` | The most recently captured value equals `v`. |
+| `HasLastValue(v)` / `HasLastValue(v, tolerance)` | The most recently captured value equals `v` (exactly, or within an absolute tolerance for computed doubles). |
 | `HasTaggedMeasurement(key, value)` | At least one measurement carries the tag `key = value`. |
 
 Assertions on `Assert.That(set)` where `set` is a `MeasurementSet` (e.g. `capture.Measurements`, `capture.Tagged(...)`, `capture.Since(...)`):
@@ -122,7 +122,7 @@ Assertions on `Assert.That(set)` where `set` is a `MeasurementSet` (e.g. `captur
 | `HasMeasurementCount(n)` / `HasNoMeasurements()` | The set holds exactly `n` measurements / is empty. |
 | `HasSampleSum(v, tolerance?)` / `HasSampleAverage(v, tolerance?)` | The histogram sample sum / mean equals `v` within an optional tolerance. |
 | `HasAllSamplesInRange(min, max)` | Every sample lies within the inclusive range. |
-| `HasSamples(...)` / `HasSamplesInAnyOrder(...)` | The samples equal the expected values, in order / in any order. |
+| `HasSamples(...)` / `HasSamplesInAnyOrder(...)` | The samples equal the expected values, in order / in any order. A `(IReadOnlyList<double> expected, double tolerance)` overload of each compares within an absolute per-sample tolerance. |
 | `HasEveryMeasurementTagged(key)` | Every measurement carries a tag with the given key. |
 | `HasTaggedMeasurement(key, value)` | At least one measurement carries the tag `key = value`. |
 
@@ -178,7 +178,9 @@ Capture is built on the first-party `MetricCollector<T>` from `Microsoft.Extensi
 
 ### Values are projected to `double`
 
-Every measurement's value is projected to `double` (via `Convert.ToDouble`) so heterogeneous instrument types share one query and assertion surface. `double` represents integers exactly only up to 2^53 and cannot represent every decimal exactly, so an exact-equality assertion on a very large `long` counter, or on a `decimal` (for example money-as-metric) histogram, can surprise. For counts and durations this is a non-issue; for non-integer values, prefer the tolerance-based `HasSampleSum` / `HasSampleAverage` assertions, which take an explicit tolerance.
+Every measurement's value is projected to `double` (via `Convert.ToDouble`) so heterogeneous instrument types share one query and assertion surface. `double` represents integers exactly only up to 2^53 and cannot represent every decimal exactly, so an exact-equality assertion on a very large `long` counter, or on a `decimal` (for example money-as-metric) histogram, can surprise. For counts and durations this is a non-issue; for non-integer values, prefer the tolerance overloads, which take an explicit absolute tolerance: `HasSampleSum` / `HasSampleAverage`, and (since 0.3.0) `HasLastValue(v, tolerance)`, `HasSamples(expected, tolerance)`, and `HasSamplesInAnyOrder(expected, tolerance)`.
+
+Counter totals are evaluated as integers: `MeasurementSet.Total` (and the `HasCounterTotal` assertions over it) round the sum to a `long` with banker's rounding, so a `Counter<double>` with a fractional total is compared as an integer. For an exact fractional total, compare `Sum` directly or use `HasSampleSum(expected, tolerance)`.
 
 ### Assertions are kind-named, not kind-checked
 

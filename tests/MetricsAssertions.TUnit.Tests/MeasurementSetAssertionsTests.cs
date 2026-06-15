@@ -48,6 +48,36 @@ internal sealed class MeasurementSetAssertionsTests
         await Assert.That(async () => await Assert.That(set).HasSamplesInAnyOrder(1, 2, 3)).Throws<AssertionException>();
     }
 
+    private static readonly double[] ApproxExpected = [0.3, 3.3];
+    private static readonly double[] ApproxReversed = [3.3, 0.3];
+    private static readonly double[] ApproxBeyond = [0.3, 99d];
+    private static readonly double[] SingleSample = [1d];
+
+    [Test]
+    public async Task SampleTolerance_PassFailAndValidate(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter("MetricsAssertions.TUnit.Tests.MS.Tolerance");
+        var histogram = meter.CreateHistogram<double>("computed");
+        using var capture = InstrumentCapture.Of(histogram);
+        histogram.Record(0.1 + 0.2);   // 0.30000000000000004
+        histogram.Record(1.1 + 2.2);   // 3.3000000000000003
+        MeasurementSet set = capture.Measurements;
+
+        await Assert.That(set).HasSamples(ApproxExpected, 1e-9);
+        await Assert.That(set).HasSamplesInAnyOrder(ApproxReversed, 1e-9);
+
+        // Exact comparison flakes on the computed doubles; beyond-tolerance samples fail.
+        await Assert.That(async () => await Assert.That(set).HasSamples(ApproxExpected, 0d)).Throws<AssertionException>();
+        await Assert.That(async () => await Assert.That(set).HasSamples(ApproxBeyond, 1e-9)).Throws<AssertionException>();
+        await Assert.That(async () => await Assert.That(set).HasSamplesInAnyOrder(ApproxBeyond, 1e-9)).Throws<AssertionException>();
+
+        await Assert.That(() => MeasurementSetAssertions.HasSamples(set, SingleSample, -1)).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(() => MeasurementSetAssertions.HasSamplesInAnyOrder(set, SingleSample, double.NaN)).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(() => MeasurementSetAssertions.HasSamples(set, null!, 1e-9)).Throws<ArgumentNullException>();
+        await Assert.That(() => MeasurementSetAssertions.HasSamplesInAnyOrder(set, null!, 1e-9)).Throws<ArgumentNullException>();
+    }
+
     [Test]
     public async Task HasNoMeasurements_PassAndFail(CancellationToken ct)
     {

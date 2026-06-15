@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Threading;
@@ -37,6 +38,36 @@ internal sealed class InstrumentCaptureAssertionsTests
         await Assert.That(async () => await Assert.That(capture).HasUpDownCounterValue(99)).Throws<AssertionException>();
         await Assert.That(async () => await Assert.That(capture).HasMeasurementCount(99)).Throws<AssertionException>();
         await Assert.That(async () => await Assert.That(capture).HasLastValue(99)).Throws<AssertionException>();
+    }
+
+    [Test]
+    public async Task HasLastValue_WithTolerance_PassFailAndValidate(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter("MetricsAssertions.TUnit.Tests.IC.Tolerance");
+        var histogram = meter.CreateHistogram<double>("computed");
+        using var capture = InstrumentCapture.Of(histogram);
+        histogram.Record(0.1 + 0.2);   // last value 0.30000000000000004
+
+        await Assert.That(capture).HasLastValue(0.3, 1e-9);
+        await Assert.That(async () => await Assert.That(capture).HasLastValue(0.3, 0d)).Throws<AssertionException>();
+        await Assert.That(async () => await Assert.That(capture).HasLastValue(0.5, 1e-9)).Throws<AssertionException>();
+
+        await Assert.That(() => InstrumentCaptureAssertions.HasLastValue(null!, 0.3, 1e-9)).Throws<ArgumentNullException>();
+        await Assert.That(() => InstrumentCaptureAssertions.HasLastValue(capture, 0.3, -1)).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(() => InstrumentCaptureAssertions.HasLastValue(capture, 0.3, double.NaN)).Throws<ArgumentOutOfRangeException>();
+    }
+
+    [Test]
+    public async Task HasLastValue_WithTolerance_EmptyCaptureFails(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter("MetricsAssertions.TUnit.Tests.IC.ToleranceEmpty");
+        var histogram = meter.CreateHistogram<double>("computed");
+        using var capture = InstrumentCapture.Of(histogram);
+
+        // No measurements: the tolerant overload still fails, naming the empty capture.
+        await Assert.That(async () => await Assert.That(capture).HasLastValue(0.3, 1e-9)).Throws<AssertionException>();
     }
 
     [Test]

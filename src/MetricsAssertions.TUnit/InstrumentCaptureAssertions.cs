@@ -117,6 +117,31 @@ public static class InstrumentCaptureAssertions
                 "\n  but it was ", value.LastValue?.ToString(CultureInfo.InvariantCulture) ?? "(no measurements)"));
     }
 
+    /// <summary>Asserts the most recently captured value equals <paramref name="expected"/> within
+    /// <paramref name="tolerance"/> (absolute), the tolerant counterpart of
+    /// <see cref="HasLastValue(InstrumentCapture, double)"/> for gauges fed computed doubles.</summary>
+    /// <param name="value">The instrument capture.</param>
+    /// <param name="expected">The expected last value.</param>
+    /// <param name="tolerance">The allowed absolute difference.</param>
+    /// <returns>A passing assertion when the last value is within tolerance; otherwise a failing one
+    /// (also failing when no measurements were captured).</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> is negative or
+    /// non-finite.</exception>
+    [GenerateAssertion]
+    public static AssertionResult HasLastValue(this InstrumentCapture value, double expected, double tolerance)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        if (!double.IsFinite(tolerance) || tolerance < 0)
+            throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, "Tolerance must be a finite, non-negative number.");
+        return value.LastValue is { } last && Math.Abs(last - expected) <= tolerance
+            ? AssertionResult.Passed
+            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat(
+                "the capture to have last value ", expected.ToString(CultureInfo.InvariantCulture),
+                " (within ", tolerance.ToString(CultureInfo.InvariantCulture), ")",
+                "\n  but it was ", value.LastValue?.ToString(CultureInfo.InvariantCulture) ?? "(no measurements)"));
+    }
+
     /// <summary>Asserts at least one captured measurement carries a tag <paramref name="tagKey"/> equal to
     /// <paramref name="tagValue"/>.</summary>
     /// <param name="value">The instrument capture.</param>
