@@ -15,7 +15,7 @@
     <Authors>John Verheij</Authors>
     <Copyright>Copyright (c) 2026 John Verheij</Copyright>
     <Description>Framework-agnostic core for fluent metric-measurement assertions over System.Diagnostics.Metrics instruments in .NET test projects, built on the first-party MetricCollector testing primitive. Captures the measurements an instrument records into a disposable, per-test InstrumentCapture and projects them to a uniform CapturedMeasurement shape. Foundation release: meter-wide capture, observable and by-name capture, tag and delta queries, and the broader fluent assertions land in 0.1.0. Test-framework assertion entry points live in adapter packages (MetricsAssertions.TUnit). AOT-compatible, trimmable, no runtime reflection.</Description>
-    <PackageTags>metrics;diagnostics;instrumentation;metriccollector;testing;assertions;dotnet;aot</PackageTags>
+    <PackageTags>assertions;testing;metrics;diagnostics;instrumentation;metriccollector;dotnet;aot</PackageTags>
     <PackageProjectUrl>https://github.com/JohnVerheij/MetricsAssertions.TUnit</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
