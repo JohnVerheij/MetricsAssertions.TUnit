@@ -1,8 +1,5 @@
 # MetricsAssertions.TUnit
 
-> Part of the **[DotNetAssertions](https://dotnetassertions.dev)** family of assertion extensions for TUnit.
-
-
 [![CI](https://github.com/JohnVerheij/MetricsAssertions.TUnit/actions/workflows/ci.yml/badge.svg)](https://github.com/JohnVerheij/MetricsAssertions.TUnit/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/JohnVerheij/MetricsAssertions.TUnit/actions/workflows/codeql.yml/badge.svg)](https://github.com/JohnVerheij/MetricsAssertions.TUnit/actions/workflows/codeql.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/JohnVerheij/MetricsAssertions.TUnit/badge)](https://scorecard.dev/viewer/?uri=github.com/JohnVerheij/MetricsAssertions.TUnit)
@@ -15,6 +12,8 @@
 TUnit-native assertions over `System.Diagnostics.Metrics` instruments for .NET tests. Fluent entry points over TUnit's `Assert.That(...)` pipeline for asserting on captured measurements, with a framework-agnostic core (`MetricsAssertions`) that a future xUnit, NUnit, or MSTest adapter can reuse. AOT-compatible, trimmable, no runtime reflection in the assertion path. Capture is the first-party `MetricCollector` testing primitive over a `System.Diagnostics.Metrics` instrument: no OpenTelemetry SDK or exporter pipeline.
 
 > **Scope:** Test projects only. Not intended for production code.
+
+> Part of the **[DotNetAssertions](https://dotnetassertions.dev)** family of assertion extensions for TUnit.
 
 ---
 
