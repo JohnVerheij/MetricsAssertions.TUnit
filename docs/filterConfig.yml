@@ -1,5 +1,5 @@
 apiRules:
-- include:
-    uidRegex: ^MetricsAssertions(\.TUnit)?(\..+)?$
 - exclude:
     uidRegex: .*\.Internal\..*
+- include:
+    uidRegex: ^MetricsAssertions(\.TUnit)?(\..+)?$
