@@ -13,6 +13,8 @@ TUnit-native assertions over `System.Diagnostics.Metrics` instruments for .NET t
 
 > **Scope:** Test projects only. Not intended for production code.
 
+> Part of the **[DotNetAssertions](https://dotnetassertions.dev)** family of assertion extensions for TUnit.
+
 ---
 
 ## Table of contents

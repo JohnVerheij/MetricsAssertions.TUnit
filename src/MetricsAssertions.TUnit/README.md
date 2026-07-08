@@ -6,6 +6,8 @@
 
 > **Scope:** Test projects only. Not intended for production code.
 
+> Part of the **[DotNetAssertions](https://dotnetassertions.dev)** family of assertion extensions for TUnit.
+
 TUnit-native fluent assertions over `System.Diagnostics.Metrics` instruments, built on the first-party `MetricCollector` testing primitive. AOT-compatible, trimmable, no runtime reflection in the assertion path.
 
 ## What ships

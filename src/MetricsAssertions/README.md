@@ -6,6 +6,8 @@
 
 > **Scope:** Test projects only. Not intended for production code.
 
+> Part of the **[DotNetAssertions](https://dotnetassertions.dev)** family. This is the framework-agnostic core; the TUnit assertions live in the matching `.TUnit` package.
+
 Framework-agnostic core for fluent metric-measurement assertions over `System.Diagnostics.Metrics` instruments, built on the first-party `MetricCollector` testing primitive. Test-framework assertion entry points live in adapter packages; **[MetricsAssertions.TUnit](https://www.nuget.org/packages/MetricsAssertions.TUnit/)** ships today.
 
 ## What ships

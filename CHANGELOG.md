@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+> *History note:* All version sections were reformatted on 2026-07-05 for one-time
+> [CONVENTIONS &sect;CHANGELOG](CONVENTIONS.md) conformance: forbidden sub-headers folded into
+> the six Keep a Changelog headers, non-user-facing content removed (internal refactors, test
+> counts, coverage numbers, CI and build hygiene, governance churn, roadmap notes), bullets
+> kept in past-tense active voice with code-formatted API leads. The nuget.org Release Notes
+> tab and the GitHub Release for each shipped version are unchanged. A CI `family-lint` gate
+> keeps future sections conforming; each is frozen per Rule 7 once shipped.
+
 ## [Unreleased]
 
 ## [0.3.0] - 2026-06-15: tolerance overloads on the value assertions
@@ -16,7 +24,7 @@ Minor release. Adds absolute-tolerance overloads to the value assertions, closin
 - **`HasLastValue(double expected, double tolerance)`** on an `InstrumentCapture` asserts the most recent value within an absolute tolerance, the tolerant counterpart of `HasLastValue(double)` for gauges fed computed doubles (where `0.1 + 0.2 != 0.3` exact comparison flakes).
 - **`HasSamples(IReadOnlyList<double> expected, double tolerance)`** and **`HasSamplesInAnyOrder(IReadOnlyList<double> expected, double tolerance)`** on a `MeasurementSet` assert the samples within an absolute per-sample tolerance, in order and order-independent respectively. The framework-agnostic core gains the matching `MeasurementSet.SamplesEqual(expected, tolerance)` / `SamplesEquivalentTo(expected, tolerance)` comparison primitives. Every tolerance overload rejects a non-finite or negative tolerance with `ArgumentOutOfRangeException`, so an invalid tolerance fails fast instead of silently matching everything (`NaN`) or nothing (negative).
 
-### Documentation
+### Changed
 
 - **`MeasurementSet.Total`** now documents that the sum is rounded to a `long` with banker's rounding (round half to even), so a `Counter<double>` with a fractional total is evaluated as an integer. For an exact fractional total, compare `Sum` directly or use `HasSampleSum(expected, tolerance)`.
 
@@ -27,10 +35,6 @@ Minor release. Adds scope-aware capture so a meter created by an `IMeterFactory`
 ### Added
 
 - **`InstrumentCapture.OfName<T>(object? meterScope, string meterName, string instrumentName, TimeProvider?)`** and **`MeterCapture.For(string meterName, object? meterScope)`** capture an instrument on a meter whose `Meter.Scope` equals `meterScope`. A meter created by an `IMeterFactory` carries the factory as its scope, so pass that factory to capture it; the existing no-scope overloads match only a meter created directly (`new Meter(name)`) and silently capture nothing from a factory-created one. The no-scope overloads now delegate to the scope-aware ones with a null scope, so existing behavior is unchanged. The by-reference `MeterCapture.Add(Instrument<T>)` now also requires the instrument's meter scope to match the bundle's scope (it already required the meter name to match), so an instrument from a same-named but differently-scoped meter is rejected.
-
-### Changed
-
-- Bumped `PackageValidationBaselineVersion` from `0.0.1` to `0.1.0` on both packages so ApiCompat strict-mode validates `0.2.0` against the most recently published baseline. The new overloads are recorded as additive differences in `CompatibilitySuppressions.xml`.
 
 ## [0.1.0] - 2026-06-07: full assertion surface
 
@@ -64,7 +68,7 @@ The full surface: a queryable `MeasurementSet`, multi-instrument `MeterCapture`,
 
 ### Changed
 
-- **Breaking:** `InstrumentCapture.Measurements` now returns a `MeasurementSet` instead of
+- **BREAKING:** `InstrumentCapture.Measurements` now returns a `MeasurementSet` instead of
   `IReadOnlyList<CapturedMeasurement>`. Use `Measurements.All` for the underlying list, or the new query
   surface directly.
 
