@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using MetricsAssertions;
 using TUnit.Assertions.Attributes;
@@ -106,6 +107,10 @@ public static class InstrumentCaptureAssertions
     /// <returns>A passing assertion when the last value matches; otherwise a failing one (also failing when
     /// no measurements were captured).</returns>
     /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    [SuppressMessage(
+        "Major Bug",
+        "S1244:Do not check floating point equality with exact values",
+        Justification = "Exact equality is the documented contract of this assertion: the caller supplies the value to match. A tolerance would pass measurements the caller did not ask for, with no way to opt out.")]
     [GenerateAssertion]
     public static AssertionResult HasLastValue(this InstrumentCapture value, double expected)
     {
