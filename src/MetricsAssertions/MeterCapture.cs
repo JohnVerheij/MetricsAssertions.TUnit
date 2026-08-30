@@ -90,7 +90,7 @@ public sealed class MeterCapture : IDisposable
     }
 
     /// <summary>Gets every captured measurement across all bundled instruments as a queryable, assertable set.</summary>
-    public MeasurementSet Measurements => new(_instruments.Values.SelectMany(i => i.Measurements.All));
+    public MeasurementSet Measurements => new(_instruments.Values.SelectMany(static i => i.Measurements.All));
 
     /// <summary>Pulls the current values of all bundled observable instruments (gauges).</summary>
     public void RecordObservable()

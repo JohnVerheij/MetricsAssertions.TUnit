@@ -18,7 +18,7 @@ namespace MetricsAssertions.TUnit;
 public static class MeasurementSetAssertions
 {
     private static string Fmt(IEnumerable<double> values)
-        => string.Join(", ", values.Select(v => v.ToString(CultureInfo.InvariantCulture)));
+        => string.Join(", ", values.Select(static v => v.ToString(CultureInfo.InvariantCulture)));
 
     private static string Num(double value) => value.ToString(CultureInfo.InvariantCulture);
 

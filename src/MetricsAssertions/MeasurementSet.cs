@@ -37,7 +37,7 @@ public sealed class MeasurementSet
     public bool IsEmpty => All.Count is 0;
 
     /// <summary>Gets the individual measured values, in capture order.</summary>
-    public IReadOnlyList<double> Values => [.. All.Select(m => m.Value)];
+    public IReadOnlyList<double> Values => [.. All.Select(static m => m.Value)];
 
     /// <summary>Gets the net total of all values as a <see cref="long"/> (a counter / up-down-counter total).</summary>
     /// <remarks>The sum is rounded to the nearest <see cref="long"/> using banker's rounding
@@ -47,16 +47,16 @@ public sealed class MeasurementSet
     public long Total => Convert.ToInt64(Sum);
 
     /// <summary>Gets the sum of all values (0 when empty).</summary>
-    public double Sum => All.Sum(m => m.Value);
+    public double Sum => All.Sum(static m => m.Value);
 
     /// <summary>Gets the smallest value (0 when empty).</summary>
-    public double Min => All.Count is 0 ? 0d : All.Min(m => m.Value);
+    public double Min => All.Count is 0 ? 0d : All.Min(static m => m.Value);
 
     /// <summary>Gets the largest value (0 when empty).</summary>
-    public double Max => All.Count is 0 ? 0d : All.Max(m => m.Value);
+    public double Max => All.Count is 0 ? 0d : All.Max(static m => m.Value);
 
     /// <summary>Gets the mean of all values (0 when empty).</summary>
-    public double Average => All.Count is 0 ? 0d : All.Average(m => m.Value);
+    public double Average => All.Count is 0 ? 0d : All.Average(static m => m.Value);
 
     /// <summary>Gets the most recently captured value, or <see langword="null"/> when the set is empty.</summary>
     public double? LastValue => All.Count is 0 ? null : All[^1].Value;
@@ -160,8 +160,8 @@ public sealed class MeasurementSet
     {
         var sb = new StringBuilder();
         foreach (CapturedMeasurement m in All
-            .OrderBy(m => m.InstrumentName, StringComparer.Ordinal)
-            .ThenBy(m => m.Value)
+            .OrderBy(static m => m.InstrumentName, StringComparer.Ordinal)
+            .ThenBy(static m => m.Value)
             .ThenBy(FormatTags, StringComparer.Ordinal))
         {
             sb.Append(m.InstrumentName).Append(' ')
@@ -211,6 +211,6 @@ public sealed class MeasurementSet
 
     private static string FormatTags(CapturedMeasurement measurement)
         => string.Join(',', measurement.Tags
-            .OrderBy(t => t.Key, StringComparer.Ordinal)
-            .Select(t => $"{t.Key}={Convert.ToString(t.Value, CultureInfo.InvariantCulture)}"));
+            .OrderBy(static t => t.Key, StringComparer.Ordinal)
+            .Select(static t => $"{t.Key}={Convert.ToString(t.Value, CultureInfo.InvariantCulture)}"));
 }
