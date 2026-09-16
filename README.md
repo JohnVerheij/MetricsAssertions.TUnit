@@ -55,7 +55,7 @@ dotnet add package MetricsAssertions.TUnit
 dotnet add package MetricsAssertions
 ```
 
-**Requirements:** TUnit 1.67.0 or later, .NET 10. AOT-compatible, trimmable.
+**Requirements:** TUnit 1.68.4 or later, .NET 10. AOT-compatible, trimmable.
 
 ## Package layout
 
