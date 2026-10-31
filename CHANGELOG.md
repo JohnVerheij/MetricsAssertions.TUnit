@@ -28,6 +28,7 @@ Minor release. The clock moves from each instrument to the capture, a capture ca
 ### Changed
 
 - **BREAKING:** **`MeterCapture.Add<T>(string)`** and **`MeterCapture.Add<T>(Instrument<T>)`** no longer take a `TimeProvider`; every instrument uses the capture's clock. Leaving the clock out of one `Add` no longer puts that instrument on the system clock, and analyzers that ask for a `TimeProvider` (such as Meziantou MA0166) no longer flag every `Add`.
+- **`TUnit.Assertions`** and **`TUnit.Core`** minimum versions raised from 1.54.0 to 1.77.0.
 - **`MeterCapture`** documentation (README and XML docs) now states that capture by meter name is process-wide and lists the ways to isolate a test: `MeterCapture.For(Meter)`, a per-test `IMeterFactory` passed as the scope, or a keyed `[NotInParallel]` for a static meter. The README previously said that each capture was isolated per test.
 
 ### Fixed
