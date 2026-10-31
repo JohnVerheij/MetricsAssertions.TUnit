@@ -94,8 +94,29 @@ public sealed class InstrumentCapture : IDisposable
     /// <param name="meterName">The meter name.</param>
     /// <param name="instrumentName">The instrument name.</param>
     /// <param name="timeProvider">An optional clock for measurement timestamps and waits.</param>
+    /// <exception cref="ArgumentException"><paramref name="meterScope"/> is a <see cref="TimeProvider"/> or a
+    /// <see cref="Meter"/>, which is never a meter scope.</exception>
     public static InstrumentCapture OfName<T>(object? meterScope, string meterName, string instrumentName, TimeProvider? timeProvider = null) where T : struct
-        => Wrap(instrumentName, new MetricCollector<T>(meterScope, meterName, instrumentName, timeProvider));
+    {
+        MeterScopeGuard.ThrowIfNotAScope(meterScope, nameof(meterScope));
+        return Wrap(instrumentName, new MetricCollector<T>(meterScope, meterName, instrumentName, timeProvider));
+    }
+
+    /// <summary>
+    /// Captures the instrument named <paramref name="instrumentName"/> on <paramref name="meter"/> itself.
+    /// Unlike capture by meter name, an instrument of another meter with the same name and scope (for example
+    /// one created by a test running in parallel) is not captured.
+    /// </summary>
+    /// <typeparam name="T">The instrument's value type.</typeparam>
+    /// <param name="meter">The meter instance whose instrument to capture.</param>
+    /// <param name="instrumentName">The instrument name.</param>
+    /// <param name="timeProvider">An optional clock for measurement timestamps and waits.</param>
+    public static InstrumentCapture OfName<T>(Meter meter, string instrumentName, TimeProvider? timeProvider = null) where T : struct
+    {
+        ArgumentNullException.ThrowIfNull(meter);
+        ArgumentNullException.ThrowIfNull(instrumentName);
+        return Wrap(instrumentName, new MetricCollector<T>(meter, instrumentName, timeProvider));
+    }
 
     private static InstrumentCapture Wrap<T>(string name, MetricCollector<T> collector) where T : struct
         => new(

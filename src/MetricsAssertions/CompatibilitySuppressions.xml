@@ -3,21 +3,70 @@
 <Suppressions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.MeasurementSet.SamplesEqual(System.Collections.Generic.IReadOnlyList{System.Double},System.Double)</Target>
+    <Target>M:MetricsAssertions.InstrumentCapture.OfName``1(System.Diagnostics.Metrics.Meter,System.String,System.TimeProvider)</Target>
     <Left>lib/net10.0/MetricsAssertions.dll</Left>
     <Right>lib/net10.0/MetricsAssertions.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.MeasurementSet.SamplesEquivalentTo(System.Collections.Generic.IReadOnlyList{System.Double},System.Double)</Target>
+    <Target>M:MetricsAssertions.MeterCapture.Add``1(System.Diagnostics.Metrics.Instrument{``0},System.TimeProvider)</Target>
+    <Left>lib/net10.0/MetricsAssertions.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.MeterCapture.Add``1(System.Diagnostics.Metrics.Instrument{``0})</Target>
+    <Left>lib/net10.0/MetricsAssertions.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.MeterCapture.Add``1(System.String,System.TimeProvider)</Target>
+    <Left>lib/net10.0/MetricsAssertions.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.MeterCapture.Add``1(System.String)</Target>
+    <Left>lib/net10.0/MetricsAssertions.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.MeterCapture.For(System.Diagnostics.Metrics.Meter,System.TimeProvider)</Target>
+    <Left>lib/net10.0/MetricsAssertions.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.MeterCapture.For(System.Diagnostics.Metrics.Meter)</Target>
+    <Left>lib/net10.0/MetricsAssertions.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.MeterCapture.For(System.String,System.Object,System.TimeProvider)</Target>
+    <Left>lib/net10.0/MetricsAssertions.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.MeterCapture.For(System.String,System.TimeProvider)</Target>
     <Left>lib/net10.0/MetricsAssertions.dll</Left>
     <Right>lib/net10.0/MetricsAssertions.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0003</DiagnosticId>
-    <Target>MetricsAssertions, Version=0.2.0.0, Culture=neutral, PublicKeyToken=null</Target>
+    <Target>MetricsAssertions, Version=0.3.0.0, Culture=neutral, PublicKeyToken=null</Target>
     <Left>lib/net10.0/MetricsAssertions.dll</Left>
     <Right>lib/net10.0/MetricsAssertions.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
