@@ -49,7 +49,7 @@ public sealed class InstrumentCapture : IDisposable
     /// <summary>Captures the supplied (referenceable) instrument.</summary>
     /// <typeparam name="T">The instrument's value type.</typeparam>
     /// <param name="instrument">The instrument to capture.</param>
-    /// <param name="timeProvider">An optional clock for measurement timestamps and waits.</param>
+    /// <param name="timeProvider">An optional clock for measurement timestamps; <see cref="WaitForAsync"/> does not use it.</param>
     public static InstrumentCapture Of<T>(Instrument<T> instrument, TimeProvider? timeProvider = null) where T : struct
     {
         ArgumentNullException.ThrowIfNull(instrument);
@@ -59,7 +59,7 @@ public sealed class InstrumentCapture : IDisposable
     /// <summary>Captures the supplied (referenceable) observable instrument.</summary>
     /// <typeparam name="T">The instrument's value type.</typeparam>
     /// <param name="instrument">The observable instrument to capture.</param>
-    /// <param name="timeProvider">An optional clock for measurement timestamps and waits.</param>
+    /// <param name="timeProvider">An optional clock for measurement timestamps; <see cref="WaitForAsync"/> does not use it.</param>
     public static InstrumentCapture OfObservable<T>(ObservableInstrument<T> instrument, TimeProvider? timeProvider = null) where T : struct
     {
         ArgumentNullException.ThrowIfNull(instrument);
@@ -76,7 +76,7 @@ public sealed class InstrumentCapture : IDisposable
     /// <typeparam name="T">The instrument's value type.</typeparam>
     /// <param name="meterName">The meter name.</param>
     /// <param name="instrumentName">The instrument name.</param>
-    /// <param name="timeProvider">An optional clock for measurement timestamps and waits.</param>
+    /// <param name="timeProvider">An optional clock for measurement timestamps; <see cref="WaitForAsync"/> does not use it.</param>
     public static InstrumentCapture OfName<T>(string meterName, string instrumentName, TimeProvider? timeProvider = null) where T : struct
         => OfName<T>(meterScope: null, meterName, instrumentName, timeProvider);
 
@@ -93,7 +93,7 @@ public sealed class InstrumentCapture : IDisposable
     /// DI-created meter, or null for a meter created directly.</param>
     /// <param name="meterName">The meter name.</param>
     /// <param name="instrumentName">The instrument name.</param>
-    /// <param name="timeProvider">An optional clock for measurement timestamps and waits.</param>
+    /// <param name="timeProvider">An optional clock for measurement timestamps; <see cref="WaitForAsync"/> does not use it.</param>
     /// <exception cref="ArgumentException"><paramref name="meterScope"/> is a <see cref="TimeProvider"/> or a
     /// <see cref="Meter"/>, which is never a meter scope.</exception>
     public static InstrumentCapture OfName<T>(object? meterScope, string meterName, string instrumentName, TimeProvider? timeProvider = null) where T : struct
@@ -110,7 +110,7 @@ public sealed class InstrumentCapture : IDisposable
     /// <typeparam name="T">The instrument's value type.</typeparam>
     /// <param name="meter">The meter instance whose instrument to capture.</param>
     /// <param name="instrumentName">The instrument name.</param>
-    /// <param name="timeProvider">An optional clock for measurement timestamps and waits.</param>
+    /// <param name="timeProvider">An optional clock for measurement timestamps; <see cref="WaitForAsync"/> does not use it.</param>
     public static InstrumentCapture OfName<T>(Meter meter, string instrumentName, TimeProvider? timeProvider = null) where T : struct
     {
         ArgumentNullException.ThrowIfNull(meter);

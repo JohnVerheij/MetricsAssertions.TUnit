@@ -18,10 +18,13 @@ namespace MetricsAssertions;
 /// passed to <c>For</c> applies to every bundled instrument.
 /// </para>
 /// <para>
-/// Capture by meter name is process-wide: it matches every meter with that name and scope, so a test running
-/// in parallel that emits to a meter of the same name lands in this capture too. For isolation, capture the
-/// <see cref="Meter"/> instance itself with <see cref="For(Meter)"/>, create the meter through a per-test
-/// <see cref="IMeterFactory"/> and pass it as the scope, or serialize the tests that share a static meter.
+/// Capture by meter name is process-wide: each bundled instrument attaches to the first instrument in the
+/// process with that meter name, scope and instrument name. With a static meter, that is the instrument every
+/// test emits to, so the measurements of a test running in parallel land in this capture too; with a meter
+/// created per test, the capture can attach to another test's instrument and miss this test's measurements.
+/// For isolation, capture the <see cref="Meter"/> instance itself with <see cref="For(Meter)"/>, create the
+/// meter through a per-test <see cref="IMeterFactory"/> and pass it as the scope, or serialize the tests that
+/// share a static meter.
 /// </para>
 /// </summary>
 public sealed class MeterCapture : IDisposable
@@ -53,7 +56,7 @@ public sealed class MeterCapture : IDisposable
     /// directly (<c>new Meter(name)</c>, no scope), with <paramref name="timeProvider"/> as the clock for
     /// every instrument added to it.</summary>
     /// <param name="meterName">The meter name to capture.</param>
-    /// <param name="timeProvider">The clock for measurement timestamps and waits of every bundled instrument,
+    /// <param name="timeProvider">The clock for the measurement timestamps of every bundled instrument,
     /// or <see langword="null"/> for the system clock.</param>
     public static MeterCapture For(string meterName, TimeProvider? timeProvider)
         => Create(meterName, meterScope: null, timeProvider);
@@ -74,7 +77,7 @@ public sealed class MeterCapture : IDisposable
     /// <paramref name="timeProvider"/> as the clock for every instrument added to it.</summary>
     /// <param name="meterName">The meter name to capture.</param>
     /// <param name="meterScope">The meter scope to match (the <c>IMeterFactory</c> instance, or null).</param>
-    /// <param name="timeProvider">The clock for measurement timestamps and waits of every bundled instrument,
+    /// <param name="timeProvider">The clock for the measurement timestamps of every bundled instrument,
     /// or <see langword="null"/> for the system clock.</param>
     /// <exception cref="ArgumentException"><paramref name="meterScope"/> is a <see cref="TimeProvider"/>
     /// or a <see cref="Meter"/>, which is never a meter scope.</exception>
@@ -91,7 +94,7 @@ public sealed class MeterCapture : IDisposable
     /// <paramref name="timeProvider"/> as the clock for every instrument added to it. Unlike capture by
     /// name, another meter with the same name and scope is not captured.</summary>
     /// <param name="meter">The meter instance to capture.</param>
-    /// <param name="timeProvider">The clock for measurement timestamps and waits of every bundled instrument,
+    /// <param name="timeProvider">The clock for the measurement timestamps of every bundled instrument,
     /// or <see langword="null"/> for the system clock.</param>
     public static MeterCapture For(Meter meter, TimeProvider? timeProvider)
     {
