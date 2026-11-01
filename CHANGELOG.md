@@ -34,7 +34,7 @@ Minor release. The clock moves from each instrument to the capture, a capture ca
 
 ### Fixed
 
-- **`MeterCapture.For(string, object?)`** and **`InstrumentCapture.OfName<T>(object?, string, string, TimeProvider?)`** now throw `ArgumentException` when a `TimeProvider` or a `Meter` is passed as the meter scope, for example through a variable typed `object`. The capture previously matched no meter, and the empty result read as "the code emitted nothing".
+- **`MeterCapture.For(string, object?)`** and **`InstrumentCapture.OfName<T>(object?, string, string, TimeProvider?)`** now throw `ArgumentException` when a `TimeProvider` or a `Meter` is passed as the meter scope, for example through a variable typed `object`. The capture previously matched no meter, and the empty result read as "the code emitted nothing". A meter whose `MeterOptions.Scope` really is a `TimeProvider` or a `Meter` (legal, but with no known use) is captured by instance with `MeterCapture.For(Meter)` or `InstrumentCapture.OfName<T>(Meter, ...)`.
 
 **Upgrade:** move the clock from each `Add` to `For`: `MeterCapture.For(name, clock).Add<int>(a).Add<long>(b)`. A test that needs a different clock per instrument can capture that instrument with `InstrumentCapture.OfName<T>(..., clock)`. A literal `MeterCapture.For(null)` no longer compiles, because two overloads now take one reference-type argument; cast it to `string` or `Meter`.
 

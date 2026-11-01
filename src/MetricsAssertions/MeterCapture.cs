@@ -68,7 +68,8 @@ public sealed class MeterCapture : IDisposable
     /// <param name="meterName">The meter name to capture.</param>
     /// <param name="meterScope">The meter scope to match (the <c>IMeterFactory</c> instance, or null).</param>
     /// <exception cref="ArgumentException"><paramref name="meterScope"/> is a <see cref="TimeProvider"/>
-    /// or a <see cref="Meter"/>, which is never a meter scope.</exception>
+    /// or a <see cref="Meter"/>, almost always passed there by mistake. Capture a meter whose scope really is one
+    /// of these by instance with <see cref="For(Meter)"/>.</exception>
     public static MeterCapture For(string meterName, object? meterScope)
         => Create(meterName, meterScope, timeProvider: null);
 
@@ -80,7 +81,8 @@ public sealed class MeterCapture : IDisposable
     /// <param name="timeProvider">The clock for the measurement timestamps of every bundled instrument,
     /// or <see langword="null"/> for the system clock.</param>
     /// <exception cref="ArgumentException"><paramref name="meterScope"/> is a <see cref="TimeProvider"/>
-    /// or a <see cref="Meter"/>, which is never a meter scope.</exception>
+    /// or a <see cref="Meter"/>, almost always passed there by mistake. Capture a meter whose scope really is one
+    /// of these by instance with <see cref="For(Meter)"/>.</exception>
     public static MeterCapture For(string meterName, object? meterScope, TimeProvider? timeProvider)
         => Create(meterName, meterScope, timeProvider);
 

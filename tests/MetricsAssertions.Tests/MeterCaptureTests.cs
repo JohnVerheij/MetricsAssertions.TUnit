@@ -212,6 +212,23 @@ internal sealed class MeterCaptureTests
     }
 
     [Test]
+    public async Task For_MeterWhoseScopeIsAClock_IsCapturedByInstance(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        // The documented way for the rare meter scoped by a TimeProvider: the scope overloads reject the clock, the
+        // instance overload matches the meter whatever its scope.
+        var clock = new FixedTimeProvider(DateTimeOffset.UnixEpoch);
+        using var meter = new Meter(new MeterOptions("MetricsAssertions.Tests.ClockScopedMeter") { Scope = clock });
+        var counter = meter.CreateCounter<long>("hits");
+        using var capture = MeterCapture.For(meter).Add<long>("hits");
+
+        counter.Add(2);
+
+        await Assert.That(meter.Scope).IsSameReferenceAs(clock);
+        await Assert.That(capture.CounterTotal("hits")).IsEqualTo(2L);
+    }
+
+    [Test]
     public async Task For_MeterPassedAsScope_Throws(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();

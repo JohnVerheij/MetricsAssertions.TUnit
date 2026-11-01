@@ -95,7 +95,8 @@ public sealed class InstrumentCapture : IDisposable
     /// <param name="instrumentName">The instrument name.</param>
     /// <param name="timeProvider">An optional clock for measurement timestamps; <see cref="WaitForAsync"/> does not use it.</param>
     /// <exception cref="ArgumentException"><paramref name="meterScope"/> is a <see cref="TimeProvider"/> or a
-    /// <see cref="Meter"/>, which is never a meter scope.</exception>
+    /// <see cref="Meter"/>, almost always passed there by mistake. Capture a meter whose scope really is one of these
+    /// by instance with <see cref="OfName{T}(Meter, string, TimeProvider?)"/>.</exception>
     public static InstrumentCapture OfName<T>(object? meterScope, string meterName, string instrumentName, TimeProvider? timeProvider = null) where T : struct
     {
         MeterScopeGuard.ThrowIfNotAScope(meterScope, nameof(meterScope));

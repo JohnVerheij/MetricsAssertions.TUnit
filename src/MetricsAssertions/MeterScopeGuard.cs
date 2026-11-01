@@ -4,9 +4,13 @@ using System.Diagnostics.Metrics;
 namespace MetricsAssertions;
 
 /// <summary>
-/// Rejects values that are never a <see cref="Meter.Scope"/> but fit the <see cref="object"/>-typed scope
-/// parameter. A clock or a meter passed there would make the capture match no meter, and the empty result
-/// would read as "the code emitted nothing".
+/// Rejects a <see cref="TimeProvider"/> or a <see cref="Meter"/> in the <see cref="object"/>-typed scope parameter.
+/// Either fits the parameter, and either there is almost always a mistake (the clock or the meter itself passed where
+/// the scope goes): the capture would match no meter, and the empty result would read as "the code emitted nothing".
+/// <see cref="Meter.Scope"/> accepts any object, so a meter scoped by one of them is legal, but it has no known use;
+/// such a meter is captured by instance (<see cref="MeterCapture.For(Meter)"/>,
+/// <see cref="InstrumentCapture.OfName{T}(Meter, string, TimeProvider?)"/>), which matches the meter whatever its
+/// scope.
 /// </summary>
 internal static class MeterScopeGuard
 {
