@@ -151,4 +151,47 @@ internal sealed class InstrumentCaptureTests
         MeasurementBaseline baseline = captureA.Snapshot();
         await Assert.That(() => captureB.Since(baseline)).Throws<ArgumentException>();
     }
+
+    [Test]
+    public async Task OfName_Meter_CapturesOnlyThatMeterInstance(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        // Same meter name and scope on two instances: the meter-instance capture ignores the other one.
+        var clock = new FixedTimeProvider(new DateTimeOffset(2026, 11, 1, 15, 0, 0, TimeSpan.Zero));
+        using var own = new Meter("MetricsAssertions.Tests.OfNameInstance");
+        using var other = new Meter("MetricsAssertions.Tests.OfNameInstance");
+        var ownRequests = own.CreateCounter<long>("requests");
+        var otherRequests = other.CreateCounter<long>("requests");
+
+        using var capture = InstrumentCapture.OfName<long>(own, "requests", clock);
+        otherRequests.Add(10);
+        ownRequests.Add(3);
+
+        await Assert.That(capture.Total).IsEqualTo(3L);
+        await Assert.That(capture.Measurements.All[0].Timestamp).IsEqualTo(clock.Now);
+    }
+
+    [Test]
+    public async Task OfName_Meter_NullArguments_Throw(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter("MetricsAssertions.Tests.OfNameNull");
+        await Assert.That(() => InstrumentCapture.OfName<long>((Meter)null!, "requests")).Throws<ArgumentNullException>();
+        await Assert.That(() => InstrumentCapture.OfName<long>(meter, null!)).Throws<ArgumentNullException>();
+    }
+
+    [Test]
+    public async Task OfName_TimeProviderOrMeterPassedAsScope_Throws(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        // Values typed as object reach the scope overload; neither is ever a meter scope.
+        using var meter = new Meter("MetricsAssertions.Tests.OfNameBadScope");
+        object clockAsObject = new FixedTimeProvider(DateTimeOffset.UnixEpoch);
+        object meterAsObject = meter;
+
+        await Assert.That(() => InstrumentCapture.OfName<long>(clockAsObject, "MetricsAssertions.Tests.OfNameBadScope", "requests"))
+            .Throws<ArgumentException>().WithMessageContaining("TimeProvider", StringComparison.Ordinal);
+        await Assert.That(() => InstrumentCapture.OfName<long>(meterAsObject, "MetricsAssertions.Tests.OfNameBadScope", "requests"))
+            .Throws<ArgumentException>().WithMessageContaining("Meter", StringComparison.Ordinal);
+    }
 }

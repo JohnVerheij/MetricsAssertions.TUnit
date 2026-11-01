@@ -15,6 +15,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-01: the capture takes the clock; capture per Meter instance
+
+Minor release. The clock moves from each instrument to the capture, a capture can target one `Meter` instance, and a clock or a meter passed as the meter scope now throws instead of capturing nothing. One breaking change: the clock parameter of `MeterCapture.Add` (see Upgrade).
+
+### Added
+
+- **`MeterCapture.For(string meterName, TimeProvider? timeProvider)`** and **`MeterCapture.For(string meterName, object? meterScope, TimeProvider? timeProvider)`** take the clock once for every instrument added to the capture. Until now `For(name, clock)` compiled to the scope overload, so the clock became the meter scope and the capture matched no meter.
+- **`MeterCapture.For(Meter meter)`** and **`MeterCapture.For(Meter meter, TimeProvider? timeProvider)`** capture the instruments of that `Meter` instance only. Capture by name attaches to the first instrument in the process with that meter name, scope and instrument name, which can belong to a test running in parallel; capture by instance does not.
+- **`InstrumentCapture.OfName<T>(Meter meter, string instrumentName, TimeProvider?)`** captures one instrument of that `Meter` instance.
+
+### Changed
+
+- **BREAKING:** **`MeterCapture.Add<T>(string)`** and **`MeterCapture.Add<T>(Instrument<T>)`** no longer take a `TimeProvider`; every instrument uses the capture's clock. Leaving the clock out of one `Add` no longer puts that instrument on the system clock, and analyzers that ask for a `TimeProvider` (such as Meziantou MA0166) no longer flag every `Add`.
+- **`TUnit.Assertions`** and **`TUnit.Core`** minimum versions raised from 1.54.0 to 1.77.0.
+- **`MeterCapture`** documentation (README and XML docs) now states that capture by meter name is process-wide and lists the ways to isolate a test: `MeterCapture.For(Meter)`, a per-test `IMeterFactory` passed as the scope, or a keyed `[NotInParallel]` for a static meter. The README previously said that each capture was isolated per test.
+- **`TimeProvider` parameters** of `InstrumentCapture` and `MeterCapture`: the XML docs now say the clock stamps the measurements. They said it also drove waits, but `WaitForAsync` waits on a count and a cancellation token and never reads the clock.
+
+### Fixed
+
+- **`MeterCapture.For(string, object?)`** and **`InstrumentCapture.OfName<T>(object?, string, string, TimeProvider?)`** now throw `ArgumentException` when a `TimeProvider` or a `Meter` is passed as the meter scope, for example through a variable typed `object`. The capture previously matched no meter, and the empty result read as "the code emitted nothing". A meter whose `MeterOptions.Scope` really is a `TimeProvider` or a `Meter` (legal, but with no known use) is captured by instance with `MeterCapture.For(Meter)` or `InstrumentCapture.OfName<T>(Meter, ...)`.
+
+**Upgrade:** move the clock from each `Add` to `For`: `MeterCapture.For(name, clock).Add<int>(a).Add<long>(b)`. A test that needs a different clock per instrument can capture that instrument with `InstrumentCapture.OfName<T>(..., clock)`. A literal `MeterCapture.For(null)` no longer compiles, because two overloads now take one reference-type argument; cast it to `string` or `Meter`.
+
 ## [0.3.0] - 2026-06-15: tolerance overloads on the value assertions
 
 Minor release. Adds absolute-tolerance overloads to the value assertions, closing the asymmetry where the histogram aggregates (`HasSampleSum` / `HasSampleAverage`) accepted a tolerance but the value assertions compared doubles exactly. Purely additive; the `0.2.0` ApiCompat baseline is preserved.
@@ -87,7 +110,8 @@ capture and a first assertion. The full surface lands in 0.1.0.
 - **`MetricsAssertions.TUnit` (adapter):** `Assert.That(capture).HasMeasurementCount(n)`, generated
   via TUnit's `[GenerateAssertion]` source generator.
 
-[unreleased]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.0.1...v0.1.0

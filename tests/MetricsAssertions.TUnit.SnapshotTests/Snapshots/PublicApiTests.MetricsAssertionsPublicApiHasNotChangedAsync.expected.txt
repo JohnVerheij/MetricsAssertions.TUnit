@@ -28,6 +28,8 @@ namespace MetricsAssertions
         public System.Threading.Tasks.Task WaitForAsync(int count, System.Threading.CancellationToken cancellationToken = default) { }
         public static MetricsAssertions.InstrumentCapture Of<T>(System.Diagnostics.Metrics.Instrument<T> instrument, System.TimeProvider? timeProvider = null)
             where T :  struct { }
+        public static MetricsAssertions.InstrumentCapture OfName<T>(System.Diagnostics.Metrics.Meter meter, string instrumentName, System.TimeProvider? timeProvider = null)
+            where T :  struct { }
         public static MetricsAssertions.InstrumentCapture OfName<T>(string meterName, string instrumentName, System.TimeProvider? timeProvider = null)
             where T :  struct { }
         public static MetricsAssertions.InstrumentCapture OfName<T>(object? meterScope, string meterName, string instrumentName, System.TimeProvider? timeProvider = null)
@@ -72,9 +74,9 @@ namespace MetricsAssertions
         public MetricsAssertions.InstrumentCapture this[string instrumentName] { get; }
         public MetricsAssertions.MeasurementSet Measurements { get; }
         public string MeterName { get; }
-        public MetricsAssertions.MeterCapture Add<T>(System.Diagnostics.Metrics.Instrument<T> instrument, System.TimeProvider? timeProvider = null)
+        public MetricsAssertions.MeterCapture Add<T>(System.Diagnostics.Metrics.Instrument<T> instrument)
             where T :  struct { }
-        public MetricsAssertions.MeterCapture Add<T>(string instrumentName, System.TimeProvider? timeProvider = null)
+        public MetricsAssertions.MeterCapture Add<T>(string instrumentName)
             where T :  struct { }
         public bool Contains(string instrumentName) { }
         public long CounterTotal(string instrumentName) { }
@@ -83,8 +85,12 @@ namespace MetricsAssertions
         public int MeasurementCount(string instrumentName) { }
         public void RecordObservable() { }
         public System.Collections.Generic.IReadOnlyList<double> Samples(string instrumentName) { }
+        public static MetricsAssertions.MeterCapture For(System.Diagnostics.Metrics.Meter meter) { }
         public static MetricsAssertions.MeterCapture For(string meterName) { }
+        public static MetricsAssertions.MeterCapture For(System.Diagnostics.Metrics.Meter meter, System.TimeProvider? timeProvider) { }
+        public static MetricsAssertions.MeterCapture For(string meterName, System.TimeProvider? timeProvider) { }
         public static MetricsAssertions.MeterCapture For(string meterName, object? meterScope) { }
+        public static MetricsAssertions.MeterCapture For(string meterName, object? meterScope, System.TimeProvider? timeProvider) { }
     }
     public static class MeterInspector
     {

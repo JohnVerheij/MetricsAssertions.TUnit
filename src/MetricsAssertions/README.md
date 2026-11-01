@@ -12,7 +12,7 @@ Framework-agnostic core for fluent metric-measurement assertions over `System.Di
 
 ## What ships
 
-- `InstrumentCapture` captures a referenceable, observable, or by-name instrument (`Of` / `OfObservable` / `OfName`) via `MetricCollector<T>`, with totals, last value, tag queries, baseline deltas (`Snapshot` / `Since`), and `WaitForAsync`. The by-name captures (`OfName`, and `MeterCapture.For`) take an optional meter scope (v0.2.0+) so a meter created by an `IMeterFactory` (the ASP.NET Core DI metrics path) can be captured.
+- `InstrumentCapture` captures a referenceable, observable, or by-name instrument (`Of` / `OfObservable` / `OfName`) via `MetricCollector<T>`, with totals, last value, tag queries, baseline deltas (`Snapshot` / `Since`), and `WaitForAsync`. The by-name captures (`OfName`, and `MeterCapture.For`) take an optional meter scope (v0.2.0+) so a meter created by an `IMeterFactory` (the ASP.NET Core DI metrics path) can be captured. Since v0.4.0, `MeterCapture.For` also takes the clock once for every instrument, and `MeterCapture.For(meter)` / `InstrumentCapture.OfName(meter, name)` capture one `Meter` instance only, so a same-named meter of a test running in parallel is not captured.
 - `MeasurementSet`: an immutable, queryable set of measurements with counter and histogram aggregates, sample comparisons, tag and instrument narrowing, and a deterministic snapshot projection.
 - `MeterCapture` (meter-wide capture across instruments) and `MeterInspector` (instrument discovery).
 - `CapturedMeasurement` (instrument name, value projected to `double`, tags, timestamp).

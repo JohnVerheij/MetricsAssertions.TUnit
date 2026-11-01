@@ -101,7 +101,38 @@ await Assert.That(capture).HasCounterTotal(5);
 await Assert.That(capture).HasMeasurementCount(2);
 ```
 
-`InstrumentCapture.Of(instrument)` wraps a `MetricCollector<T>` over the instrument and collects every measurement it records. Create one per test with `using` for isolation; disposing it releases the collector.
+`InstrumentCapture.Of(instrument)` wraps a `MetricCollector<T>` over the instrument and collects every measurement it records. Create one per test with `using`; disposing it releases the collector.
+
+### A workflow, end to end
+
+A test that runs a piece of code and checks the counter and the histogram it records, on a fake clock:
+
+```csharp
+using System.Diagnostics.Metrics;
+using MetricsAssertions;
+using Microsoft.Extensions.Time.Testing;
+
+[Test]
+public async Task PlacingAnOrder_CountsItAndRecordsTheLatency()
+{
+    var clock = new FakeTimeProvider();
+    using var meter = new Meter("MyCompany.Orders");      // the meter the code under test receives
+    var orders = new OrderService(meter, clock);
+
+    // One capture for the meter instance; the clock applies to every instrument added to it.
+    using var capture = MeterCapture.For(meter, clock)
+        .Add<long>("orders.placed")
+        .Add<double>("orders.latency");
+
+    await orders.PlaceAsync("A-1");
+
+    await Assert.That(capture).HasCounterTotal("orders.placed", 1);
+    await Assert.That(capture).HasMeasurementCount("orders.latency", 1);
+    await Assert.That(capture["orders.latency"].Measurements).HasAllSamplesInRange(0, 500);
+}
+```
+
+`MeterCapture.For(meter, ...)` captures that `Meter` instance only, so a test running in parallel with its own `Meter("MyCompany.Orders")` doesn't end up in this capture. See [Capture lifetime and isolation](#capture-lifetime-and-isolation) for meters the test doesn't own.
 
 ## Entry points
 
@@ -149,6 +180,8 @@ The `MetricsAssertions` core exposes the capture and query surface for reading m
 | `InstrumentCapture.RecordObservable` / `WaitForAsync` | Pull observable-gauge values; await a measurement count. |
 | `MeasurementSet` | An immutable, queryable set: `Total`/`Sum`/`Min`/`Max`/`Average`/`Values`, `Tagged`/`ForInstrument`, sample comparisons, and `ToSnapshotString`. |
 | `MeterCapture.For` + `Add` | Build a meter-wide bundle and query per instrument or across all via `Measurements`. |
+| `MeterCapture.For(name, clock)` / `For(name, meterScope, clock)` *(v0.4.0+)* | Set the clock once for every bundled instrument; `Add` takes no clock. |
+| `MeterCapture.For(meter)` / `InstrumentCapture.OfName<T>(meter, name)` *(v0.4.0+)* | Capture one `Meter` instance only, so a same-named meter of a test running in parallel is not captured. |
 | `MeterInspector` | Discover a meter's published instruments (`PublishedInstrumentNames` / `IsPublished` / `PublishesAll`). |
 | `CapturedMeasurement` | A captured measurement: instrument name, value projected to `double`, tags, and timestamp. |
 
@@ -175,9 +208,14 @@ await Assert.That(capture).HasMeasurementCount(2).Because("each retry records on
 
 Capture is built on the first-party `MetricCollector<T>` from `Microsoft.Extensions.Diagnostics.Testing`, not a hand-rolled `MeterListener`. `MetricCollector<T>` is the BCL's purpose-built measurement-capture primitive: strongly typed, with built-in measurement snapshots and an injectable `TimeProvider`. Building on it keeps the capture small and correct, at the cost of one NuGet runtime dependency (`Microsoft.Extensions.Diagnostics.Testing`, a Microsoft-shipped package). No OpenTelemetry SDK or exporter pipeline is involved.
 
-### Why per-test capture, disposed via `using`
+### Capture lifetime and isolation
 
-`InstrumentCapture` is a `using`-scoped handle that attaches its collector on creation and releases it on `Dispose`, with a fresh measurement stream per instance. This keeps capture isolated per test (no process-wide collector leaking measurements across parallel or sequential tests) and bounds the collector's lifetime to the test that needs it.
+`InstrumentCapture` and `MeterCapture` are `using`-scoped handles: a capture attaches its collector when it is created and releases it on `Dispose`, with a fresh measurement stream per instance. That bounds the collection to the test, but it does not isolate the test from other tests running in parallel:
+
+- **Capture by meter name is process-wide.** Each captured instrument attaches to the first instrument in the process with that meter name, scope and instrument name (`MetricCollector<T>` stops looking after that). With a static meter, that is the instrument every test emits to, so every capture sees the measurements of every test; with a meter created per test, a capture can attach to another test's instrument and miss its own test's measurements.
+- **Isolate by instance:** when the test creates or receives the `Meter`, capture it with `MeterCapture.For(meter)` or `InstrumentCapture.OfName<T>(meter, name)`. A meter with the same name elsewhere is not captured.
+- **Isolate by scope:** create the meter through a per-test `IMeterFactory` (for example from the test host's DI container) and pass the factory as the scope: `MeterCapture.For(name, factory)`.
+- **Static meter:** serialize only the tests that emit to it with a keyed `[NotInParallel("meter:MyCompany.Orders")]`, instead of an un-keyed `[NotInParallel]` that serializes the whole suite.
 
 ### Values are projected to `double`
 
