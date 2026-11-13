@@ -60,6 +60,8 @@ internal sealed class MeasurementSetTests
             await Assert.That(set.SamplesEquivalentTo(30, 10, 20)).IsTrue();
             await Assert.That(set.AllValuesInRange(0, 100)).IsTrue();
             await Assert.That(set.AllValuesInRange(0, 25)).IsFalse();
+            await Assert.That(set.AllValuesInRange(15, 100)).IsFalse();
+            await Assert.That(set.AllValuesInRange(10, 30)).IsTrue();
         }
     }
 

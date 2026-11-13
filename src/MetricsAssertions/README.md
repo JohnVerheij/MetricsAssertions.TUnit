@@ -2,19 +2,20 @@
 
 [![NuGet](https://img.shields.io/nuget/v/MetricsAssertions.svg)](https://www.nuget.org/packages/MetricsAssertions/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com/download/dotnet/10.0)
+[![.NET](https://img.shields.io/badge/.NET-10.0%20%7C%2011.0-512BD4.svg)](https://dotnet.microsoft.com/download/dotnet)
 
 > **Scope:** Test projects only. Not intended for production code.
 
 > Part of the **[DotNetAssertions](https://dotnetassertions.dev)** family. This is the framework-agnostic core; the TUnit assertions live in the matching `.TUnit` package.
 
-Framework-agnostic core for fluent metric-measurement assertions over `System.Diagnostics.Metrics` instruments, built on the first-party `MetricCollector` testing primitive. Test-framework assertion entry points live in adapter packages; **[MetricsAssertions.TUnit](https://www.nuget.org/packages/MetricsAssertions.TUnit/)** ships today.
+Framework-agnostic core for fluent metric-measurement assertions over `System.Diagnostics.Metrics` instruments, built on the first-party `MetricCollector` testing primitive. Targets .NET 10 and .NET 11. Test-framework assertion entry points live in adapter packages; **[MetricsAssertions.TUnit](https://www.nuget.org/packages/MetricsAssertions.TUnit/)** ships today.
 
 ## What ships
 
 - `InstrumentCapture` captures a referenceable, observable, or by-name instrument (`Of` / `OfObservable` / `OfName`) via `MetricCollector<T>`, with totals, last value, tag queries, baseline deltas (`Snapshot` / `Since`), and `WaitForAsync`. The by-name captures (`OfName`, and `MeterCapture.For`) take an optional meter scope (v0.2.0+) so a meter created by an `IMeterFactory` (the ASP.NET Core DI metrics path) can be captured. Since v0.4.0, `MeterCapture.For` also takes the clock once for every instrument, and `MeterCapture.For(meter)` / `InstrumentCapture.OfName(meter, name)` capture one `Meter` instance only, so a same-named meter of a test running in parallel is not captured.
 - `MeasurementSet`: an immutable, queryable set of measurements with counter and histogram aggregates, sample comparisons, tag and instrument narrowing, and a deterministic snapshot projection.
-- `MeterCapture` (meter-wide capture across instruments) and `MeterInspector` (instrument discovery).
+- `MeterCapture` (meter-wide capture across instruments): `For` (by name, scope, `Meter` instance, optional clock) + `Add`, the indexer and `Contains`, `CounterTotal` / `Samples` / `MeasurementCount` / `HasMeasurementTagged` per instrument, `Measurements`, `RecordObservable`, and `InCurrentFlow()` to record only the async flow of the test that calls it.
+- `MeterInspector` (instrument discovery): `PublishedInstrumentNames`, `IsPublished`, `PublishesAll`.
 - `CapturedMeasurement` (instrument name, value projected to `double`, tags, timestamp).
 
 ## Install

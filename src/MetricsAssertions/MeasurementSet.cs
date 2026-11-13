@@ -19,10 +19,24 @@ public sealed class MeasurementSet
     /// <summary>Creates a set over the supplied measurements (defensively copied).</summary>
     /// <param name="measurements">The measurements in the set.</param>
     public MeasurementSet(IEnumerable<CapturedMeasurement> measurements)
+        : this(measurements, ignoredFromOtherFlows: 0)
+    {
+    }
+
+    /// <summary>Creates a set over the supplied measurements (defensively copied), remembering how many measurements a
+    /// flow-scoped capture ignored because other flows emitted them.</summary>
+    /// <param name="measurements">The measurements in the set.</param>
+    /// <param name="ignoredFromOtherFlows">How many measurements of the captured instruments other flows emitted.</param>
+    internal MeasurementSet(IEnumerable<CapturedMeasurement> measurements, int ignoredFromOtherFlows)
     {
         ArgumentNullException.ThrowIfNull(measurements);
         All = [.. measurements];
+        IgnoredFromOtherFlows = ignoredFromOtherFlows;
     }
+
+    /// <summary>Gets how many measurements of the captured instruments other flows emitted and a flow-scoped capture
+    /// ignored (0 for every other capture). <see cref="Describe"/> reports it when the set is empty.</summary>
+    internal int IgnoredFromOtherFlows { get; }
 
     /// <summary>An empty set.</summary>
     public static MeasurementSet Empty { get; } = new([]);
@@ -43,19 +57,23 @@ public sealed class MeasurementSet
     /// <remarks>The sum is rounded to the nearest <see cref="long"/> using banker's rounding
     /// (round half to even), so a <c>Counter&lt;double&gt;</c> whose values sum to a fractional total is
     /// evaluated as an integer. For an exact fractional total compare <see cref="Sum"/> directly, or use
-    /// the histogram aggregate <c>HasSampleSum(expected, tolerance)</c> on the measurement set.</remarks>
+    /// the histogram aggregate <c>HasSampleSum(expected, tolerance)</c> on the measurement set. The values are
+    /// projected to <see cref="double"/>, which holds integers exactly only up to 2^53.</remarks>
+    /// <exception cref="OverflowException">The sum is not a number, is infinite, or lies beyond the range of a
+    /// <see cref="long"/> (a counter that recorded <see cref="long.MaxValue"/> sums to 2^63 as a double). The
+    /// <c>HasCounterTotal</c> assertions report such a sum as a failed assertion instead.</exception>
     public long Total => Convert.ToInt64(Sum);
 
-    /// <summary>Gets the sum of all values (0 when empty).</summary>
+    /// <summary>Gets the sum of all values, in the unit of the captured instrument (0 when empty).</summary>
     public double Sum => All.Sum(static m => m.Value);
 
-    /// <summary>Gets the smallest value (0 when empty).</summary>
+    /// <summary>Gets the smallest value, in the unit of the captured instrument (0 when empty).</summary>
     public double Min => All.Count is 0 ? 0d : All.Min(static m => m.Value);
 
-    /// <summary>Gets the largest value (0 when empty).</summary>
+    /// <summary>Gets the largest value, in the unit of the captured instrument (0 when empty).</summary>
     public double Max => All.Count is 0 ? 0d : All.Max(static m => m.Value);
 
-    /// <summary>Gets the mean of all values (0 when empty).</summary>
+    /// <summary>Gets the mean of all values, in the unit of the captured instrument (0 when empty).</summary>
     public double Average => All.Count is 0 ? 0d : All.Average(static m => m.Value);
 
     /// <summary>Gets the most recently captured value, or <see langword="null"/> when the set is empty.</summary>
@@ -65,14 +83,14 @@ public sealed class MeasurementSet
     /// <param name="key">The tag key to match.</param>
     /// <param name="value">The tag value to match (string-compared invariantly).</param>
     public MeasurementSet Tagged(string key, object? value)
-        => new(All.Where(m => TagEquals(m, key, value)));
+        => new(All.Where(m => TagEquals(m, key, value)), IgnoredFromOtherFlows);
 
     /// <summary>Returns the subset whose measurements carry all of the supplied tags.</summary>
     /// <param name="tags">The tags that must all be present and equal.</param>
     public MeasurementSet Tagged(params (string Key, object? Value)[] tags)
     {
         ArgumentNullException.ThrowIfNull(tags);
-        return new(All.Where(m => Array.TrueForAll(tags, t => TagEquals(m, t.Key, t.Value))));
+        return new(All.Where(m => Array.TrueForAll(tags, t => TagEquals(m, t.Key, t.Value))), IgnoredFromOtherFlows);
     }
 
     /// <summary>Returns whether the values equal <paramref name="expected"/> in order.</summary>
@@ -86,7 +104,7 @@ public sealed class MeasurementSet
     /// <summary>Returns whether the values equal <paramref name="expected"/> in order, each within
     /// <paramref name="tolerance"/> (absolute).</summary>
     /// <param name="expected">The expected samples, in order.</param>
-    /// <param name="tolerance">The allowed absolute difference per sample.</param>
+    /// <param name="tolerance">The allowed absolute difference per sample, in the unit of the captured instrument.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> is negative or non-finite.</exception>
     public bool SamplesEqual(IReadOnlyList<double> expected, double tolerance)
     {
@@ -113,7 +131,7 @@ public sealed class MeasurementSet
     /// within <paramref name="tolerance"/> (absolute). Both sequences are sorted and compared
     /// element by element, so equal counts and pairwise-within-tolerance values match.</summary>
     /// <param name="expected">The expected samples, in any order.</param>
-    /// <param name="tolerance">The allowed absolute difference per sample.</param>
+    /// <param name="tolerance">The allowed absolute difference per sample, in the unit of the captured instrument.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> is negative or non-finite.</exception>
     public bool SamplesEquivalentTo(IReadOnlyList<double> expected, double tolerance)
     {
@@ -139,7 +157,7 @@ public sealed class MeasurementSet
     /// <summary>Returns the subset emitted by the named instrument.</summary>
     /// <param name="instrumentName">The instrument name to filter by.</param>
     public MeasurementSet ForInstrument(string instrumentName)
-        => new(All.Where(m => string.Equals(m.InstrumentName, instrumentName, StringComparison.Ordinal)));
+        => new(All.Where(m => string.Equals(m.InstrumentName, instrumentName, StringComparison.Ordinal)), IgnoredFromOtherFlows);
 
     /// <summary>Returns whether every measurement in the set carries a tag with the given <paramref name="key"/>.</summary>
     /// <param name="key">The tag key that must be present on every measurement.</param>
@@ -183,7 +201,14 @@ public sealed class MeasurementSet
     public string Describe()
     {
         if (All.Count is 0)
-            return "    (no measurements captured)";
+        {
+            return IgnoredFromOtherFlows is 0
+                ? "    (no measurements captured)"
+                : string.Concat(
+                    "    (no measurements captured; ",
+                    IgnoredFromOtherFlows.ToString(CultureInfo.InvariantCulture),
+                    " measurement(s) of the captured instruments were emitted by other flows and ignored, because this capture records only the flow that created it)");
+        }
 
         var sb = new StringBuilder();
         for (int i = 0; i < All.Count; i++)

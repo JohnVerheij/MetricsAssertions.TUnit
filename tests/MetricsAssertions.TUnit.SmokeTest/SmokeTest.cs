@@ -43,4 +43,18 @@ internal sealed class SmokeTest
 
         await Assert.That(capture).HasMeasurementCount(1);
     }
+
+    [Test]
+    public async Task ConsumesFlowScopedCaptureFromCore(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        using var meter = new Meter("Smoke.Consumer.Flow");
+        var counter = meter.CreateCounter<long>("smoke.count");
+        using var capture = MeterCapture.For("Smoke.Consumer.Flow").InCurrentFlow().Add<long>("smoke.count");
+
+        counter.Add(2);
+        await Task.Run(() => counter.Add(3), cancellationToken);
+
+        await Assert.That(capture).HasCounterTotal("smoke.count", 5);
+    }
 }

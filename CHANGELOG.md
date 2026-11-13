@@ -15,6 +15,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`MeterCapture.InCurrentFlow()`** makes a capture record only the measurements emitted in the async flow of the code that calls it, and in the flows started from it afterwards (after an `await`, in `Task.Run`, `Parallel.ForEachAsync`, `ThreadPool.QueueUserWorkItem` and timers). Call it right after `For` and before the first `Add`: `MeterCapture.For("MyCompany.Orders").InCurrentFlow().Add<long>("orders.placed")`. Capture by name is process-wide and a keyed `[NotInParallel]` does not keep out the tests that carry another key; a flow-scoped capture does, and it attaches to every matching instrument in the process instead of the first only, so a meter created per test is not missed. It does not record a capture created inside an awaited async method, in a constructor or in a `[Before(Test)]` / `[Before(Class)]` hook (the marker does not reach the test body), nor code that was already running before the capture was created, nor a thread started with `ExecutionContext.SuppressFlow()`. When such a capture is empty while other flows emitted to the same instruments, the failure message says so.
+- **.NET 11 target.** Both packages target `net10.0;net11.0`; each target framework uses the `Microsoft.Extensions.Diagnostics.Testing` version of its own .NET release (10.11.0 and 11.0.0).
+
+### Changed
+
+- **Failure messages.** Every assertion now has an expectation message, so the "Expected ..." line says what the assertion checks and the "but ..." line describes only what was found, instead of repeating the expectation. For example `HasMeasurementCount(2)` on a capture with one measurement now reads `Expected to have 2 measurement(s)` / `but it had 1` / the dump of the captured measurements. The sample assertions (`HasSamples`, `HasSamplesInAnyOrder`) show the expected samples on the "but" line. There is no API change.
+- **README and XML documentation of capture isolation.** They now say that a keyed `[NotInParallel]` is not enough to isolate a test from a static meter (0.4.0 listed it as the remedy for that case) and put `InCurrentFlow()` first, then capture by `Meter` instance, a per-test `IMeterFactory` scope, a unique tag and an un-keyed `[NotInParallel]`.
+- **Documentation.** The adapter README lists all 25 assertions and the family; the core README names the members of `MeterCapture` and `MeterInspector`; the READMEs state that values keep the unit of the instrument, that tag values compare as invariant text (a `null` tag value equals an empty string), that `HasCounterTotal` and `HasCounterTotalAtLeast` reject negative deltas while `HasUpDownCounterValue` does not, that an instrument that never existed reads as "nothing emitted" (check with `MeterInspector.IsPublished`), and that on .NET 11 the `http.client.open_connections` and `http.client.active_requests` metrics are observable instruments, so a capture of them needs `RecordObservable()`. The README sample that drives a capture with a fake clock now names the package that provides `FakeTimeProvider`, `Microsoft.Extensions.TimeProvider.Testing`.
+
+### Fixed
+
+- **`HasCounterTotal`, `HasCounterTotalAtLeast` and `HasUpDownCounterValue`** threw `OverflowException` when the values summed to something no `long` can hold (`NaN`, infinity, or a counter that recorded `long.MaxValue`). They now fail the assertion with a message that names the sum. `MeasurementSet.Total`, `InstrumentCapture.Total` and `MeterCapture.CounterTotal` still throw `OverflowException` for such a sum, now documented.
+- **`InstrumentCapture.WaitForAsync`** on a disposed capture waited until its token was canceled, or forever without one. It now throws `ObjectDisposedException`, as every other read of a disposed capture does.
+
 ## [0.4.0] - 2026-11-01: the capture takes the clock; capture per Meter instance
 
 Minor release. The clock moves from each instrument to the capture, a capture can target one `Meter` instance, and a clock or a meter passed as the meter scope now throws instead of capturing nothing. One breaking change: the clock parameter of `MeterCapture.Add` (see Upgrade).

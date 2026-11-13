@@ -27,7 +27,9 @@ public sealed class InstrumentCapture : IDisposable
     private readonly Func<IReadOnlyList<CapturedMeasurement>> _rawSnapshot;
     private readonly Action _recordObservable;
     private readonly Func<int, CancellationToken, Task> _wait;
+    private readonly Func<int> _ignoredFromOtherFlows;
     private readonly object _token = new();
+    private bool _disposed;
 
     /// <summary>Gets the name of the captured instrument.</summary>
     public string InstrumentName { get; }
@@ -37,13 +39,15 @@ public sealed class InstrumentCapture : IDisposable
         IDisposable collector,
         Func<IReadOnlyList<CapturedMeasurement>> rawSnapshot,
         Action recordObservable,
-        Func<int, CancellationToken, Task> wait)
+        Func<int, CancellationToken, Task> wait,
+        Func<int> ignoredFromOtherFlows)
     {
         InstrumentName = instrumentName;
         _collector = collector;
         _rawSnapshot = rawSnapshot;
         _recordObservable = recordObservable;
         _wait = wait;
+        _ignoredFromOtherFlows = ignoredFromOtherFlows;
     }
 
     /// <summary>Captures the supplied (referenceable) instrument.</summary>
@@ -126,10 +130,37 @@ public sealed class InstrumentCapture : IDisposable
             rawSnapshot: () => [.. collector.GetMeasurementSnapshot().Select(m =>
                 new CapturedMeasurement(name, Convert.ToDouble(m.Value, CultureInfo.InvariantCulture), m.Tags, m.Timestamp))],
             recordObservable: collector.RecordObservableInstruments,
-            wait: collector.WaitForMeasurementsAsync);
+            wait: collector.WaitForMeasurementsAsync,
+            ignoredFromOtherFlows: static () => 0);
+
+    /// <summary>
+    /// Captures the named instrument of the matching meters, recording only the measurements emitted in the async flow
+    /// identified by <paramref name="flowToken"/>. Every matching instrument is captured, not the first one only.
+    /// </summary>
+    /// <typeparam name="T">The instrument's value type.</typeparam>
+    /// <param name="flowToken">The token of the flow to record, from <see cref="FlowContext.Enter"/>.</param>
+    /// <param name="instrumentName">The instrument name.</param>
+    /// <param name="matches">Decides which published instruments are captured.</param>
+    /// <param name="timeProvider">An optional clock for measurement timestamps.</param>
+    /// <returns>The capture.</returns>
+    internal static InstrumentCapture InFlow<T>(object flowToken, string instrumentName, Func<Instrument, bool> matches, TimeProvider? timeProvider)
+        where T : struct
+    {
+        var recorder = new FlowMeasurementRecorder<T>(flowToken, instrumentName, matches, timeProvider);
+        return new(
+            instrumentName,
+            recorder,
+            rawSnapshot: recorder.Snapshot,
+            recordObservable: recorder.RecordObservable,
+            wait: recorder.WaitAsync,
+            ignoredFromOtherFlows: () => recorder.IgnoredFromOtherFlows);
+    }
+
+    /// <summary>Gets how many measurements of the captured instruments other flows emitted, which a flow-scoped capture ignores (0 otherwise).</summary>
+    internal int IgnoredFromOtherFlows => _ignoredFromOtherFlows();
 
     /// <summary>Gets a snapshot of every captured measurement as a queryable, assertable set.</summary>
-    public MeasurementSet Measurements => new(_rawSnapshot());
+    public MeasurementSet Measurements => new(_rawSnapshot(), _ignoredFromOtherFlows());
 
     /// <summary>Returns the subset of captured measurements carrying a tag <paramref name="key"/>=<paramref name="value"/>.</summary>
     /// <param name="key">The tag key to match.</param>
@@ -137,6 +168,8 @@ public sealed class InstrumentCapture : IDisposable
     public MeasurementSet Tagged(string key, object? value) => Measurements.Tagged(key, value);
 
     /// <summary>Gets the net total of all captured values (the running total of a counter / up-down counter).</summary>
+    /// <exception cref="OverflowException">The values sum to something no <see cref="long"/> can hold; see
+    /// <see cref="MeasurementSet.Total"/>.</exception>
     public long Total => Measurements.Total;
 
     /// <summary>Gets how many measurements were captured.</summary>
@@ -155,7 +188,7 @@ public sealed class InstrumentCapture : IDisposable
     {
         if (!ReferenceEquals(baseline.Owner, _token))
             throw new ArgumentException("The baseline was taken from a different InstrumentCapture.", nameof(baseline));
-        return new(_rawSnapshot().Skip(baseline.Count));
+        return new(_rawSnapshot().Skip(baseline.Count), _ignoredFromOtherFlows());
     }
 
     /// <summary>Pulls the current values of the instrument when it is observable (a gauge).</summary>
@@ -164,13 +197,25 @@ public sealed class InstrumentCapture : IDisposable
     /// <summary>Waits until at least <paramref name="count"/> measurements have been captured.</summary>
     /// <param name="count">The minimum number of measurements to wait for.</param>
     /// <param name="cancellationToken">A token to cancel the wait.</param>
-    public Task WaitForAsync(int count, CancellationToken cancellationToken = default) => _wait(count, cancellationToken);
+    /// <remarks>A wait that is still pending when the capture is disposed is not completed: pass a token to bound it.</remarks>
+    /// <exception cref="ObjectDisposedException">The capture was disposed. Without this check the wait would never end,
+    /// because a disposed capture records nothing more.</exception>
+    public Task WaitForAsync(int count, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed), this);
+        return _wait(count, cancellationToken);
+    }
 
     /// <summary>Returns whether at least one captured measurement carries a tag <paramref name="key"/>=<paramref name="value"/>.</summary>
     /// <param name="key">The tag key to match.</param>
     /// <param name="value">The tag value to match.</param>
     public bool HasMeasurementTagged(string key, object? value) => Tagged(key, value).Count > 0;
 
-    /// <summary>Releases the underlying collector.</summary>
-    public void Dispose() => _collector.Dispose();
+    /// <summary>Releases the underlying collector. Reading the capture afterwards throws <see cref="ObjectDisposedException"/>;
+    /// disposing it again does nothing.</summary>
+    public void Dispose()
+    {
+        Volatile.Write(ref _disposed, true);
+        _collector.Dispose();
+    }
 }

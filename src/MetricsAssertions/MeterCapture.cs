@@ -19,12 +19,18 @@ namespace MetricsAssertions;
 /// </para>
 /// <para>
 /// Capture by meter name is process-wide: each bundled instrument attaches to the first instrument in the
-/// process with that meter name, scope and instrument name. With a static meter, that is the instrument every
-/// test emits to, so the measurements of a test running in parallel land in this capture too; with a meter
-/// created per test, the capture can attach to another test's instrument and miss this test's measurements.
-/// For isolation, capture the <see cref="Meter"/> instance itself with <see cref="For(Meter)"/>, create the
-/// meter through a per-test <see cref="IMeterFactory"/> and pass it as the scope, or serialize the tests that
-/// share a static meter.
+/// process with that meter name, scope and instrument name, and records every measurement that instrument receives,
+/// whichever test or thread emits it. With a static meter, that is the instrument every test emits to, so the
+/// measurements of a test running in parallel land in this capture too. A keyed <c>[NotInParallel]</c> does not
+/// prevent that: it only serializes the tests that carry the same key, and any other test that emits to the meter
+/// keeps running. With a meter created per test, the capture can attach to another test's instrument and miss
+/// this test's measurements.
+/// </para>
+/// <para>
+/// For isolation, scope the capture to the async flow of the test with <see cref="InCurrentFlow"/> (the first remedy for a
+/// static meter), capture the <see cref="Meter"/> instance itself with <see cref="For(Meter)"/>, create the
+/// meter through a per-test <see cref="IMeterFactory"/> and pass it as the scope, or serialize every test that emits to
+/// the meter with an un-keyed <c>[NotInParallel]</c>.
 /// </para>
 /// </summary>
 public sealed class MeterCapture : IDisposable
@@ -33,6 +39,7 @@ public sealed class MeterCapture : IDisposable
     private readonly object? _meterScope;
     private readonly Meter? _meter;
     private readonly TimeProvider? _timeProvider;
+    private object? _flowToken;
 
     /// <summary>Gets the meter name this capture is scoped to.</summary>
     public string MeterName { get; }
@@ -118,6 +125,12 @@ public sealed class MeterCapture : IDisposable
     public MeterCapture Add<T>(string instrumentName) where T : struct
     {
         ArgumentNullException.ThrowIfNull(instrumentName);
+        if (_flowToken is not null)
+        {
+            Replace(instrumentName, InstrumentCapture.InFlow<T>(_flowToken, instrumentName, MatchesNamedInstrument(instrumentName), _timeProvider));
+            return this;
+        }
+
         Replace(instrumentName, _meter is null
             ? InstrumentCapture.OfName<T>(_meterScope, MeterName, instrumentName, _timeProvider)
             : InstrumentCapture.OfName<T>(_meter, instrumentName, _timeProvider));
@@ -138,9 +151,42 @@ public sealed class MeterCapture : IDisposable
                     ? $"Instrument '{instrument.Name}' belongs to meter '{instrument.Meter.Name}', not the captured meter '{MeterName}' with the matching scope; the meter name and scope must both match."
                     : $"Instrument '{instrument.Name}' belongs to a different Meter instance than the captured meter '{MeterName}'; a capture created from a Meter only accepts instruments of that instance.",
                 nameof(instrument));
-        Replace(instrument.Name, InstrumentCapture.Of(instrument, _timeProvider));
+        Replace(instrument.Name, _flowToken is null
+            ? InstrumentCapture.Of(instrument, _timeProvider)
+            : InstrumentCapture.InFlow<T>(_flowToken, instrument.Name, i => ReferenceEquals(i, instrument), _timeProvider));
         return this;
     }
+
+    /// <summary>
+    /// Makes this capture record only the measurements emitted in the async flow of the code that calls this method:
+    /// that flow, and the flows it starts afterwards (<see langword="await"/> continuations, <c>Task.Run</c>,
+    /// <c>Parallel.ForEachAsync</c>, <c>ThreadPool.QueueUserWorkItem</c>, timers). A measurement of a test running in
+    /// parallel is not recorded, even from the same static meter. Call it right after <c>For</c>, before the first
+    /// <c>Add</c>. Every instrument added afterwards attaches to every matching instrument in the process, not the first
+    /// one only, so a meter created per test is not missed.
+    /// <para>
+    /// What the flow rule does not cover: a capture created inside an awaited async method does not reach the caller
+    /// (the marker does not flow back up), so create it in the test method or in a synchronous helper; measurements
+    /// emitted by a thread started with <c>ExecutionContext.SuppressFlow()</c>, or by a service or thread that was already
+    /// running before this call, are not recorded. When such an emission is the one under test, use capture by
+    /// <see cref="For(Meter)"/> or a serialized test instead. If a flow-scoped capture is empty while other flows emitted
+    /// to the same instruments, <see cref="MeasurementSet.Describe"/> (and so every failure message) says so.
+    /// </para>
+    /// </summary>
+    /// <returns>This capture.</returns>
+    /// <exception cref="InvalidOperationException">The capture is already flow-scoped, or an instrument was already added.</exception>
+    public MeterCapture InCurrentFlow()
+    {
+        if (_flowToken is not null)
+            throw new InvalidOperationException("The capture is already scoped to the current flow.");
+        if (_instruments.Count > 0)
+            throw new InvalidOperationException("InCurrentFlow must be called before the first Add: an instrument that was added earlier is not scoped to the flow.");
+        _flowToken = FlowContext.Enter();
+        return this;
+    }
+
+    private Func<Instrument, bool> MatchesNamedInstrument(string instrumentName)
+        => instrument => string.Equals(instrument.Name, instrumentName, StringComparison.Ordinal) && IsCapturedMeter(instrument.Meter);
 
     private bool IsCapturedMeter(Meter meter)
         => _meter is null
@@ -160,7 +206,8 @@ public sealed class MeterCapture : IDisposable
     }
 
     /// <summary>Gets every captured measurement across all bundled instruments as a queryable, assertable set.</summary>
-    public MeasurementSet Measurements => new(_instruments.Values.SelectMany(static i => i.Measurements.All));
+    public MeasurementSet Measurements
+        => new(_instruments.Values.SelectMany(static i => i.Measurements.All), _instruments.Values.Sum(static i => i.IgnoredFromOtherFlows));
 
     /// <summary>Pulls the current values of all bundled observable instruments (gauges).</summary>
     public void RecordObservable()
@@ -171,6 +218,8 @@ public sealed class MeterCapture : IDisposable
 
     /// <summary>Gets the net total for a bundled counter / up-down counter.</summary>
     /// <param name="instrumentName">The instrument name.</param>
+    /// <exception cref="OverflowException">The values sum to something no <see cref="long"/> can hold; see
+    /// <see cref="MeasurementSet.Total"/>.</exception>
     public long CounterTotal(string instrumentName) => _instruments[instrumentName].Total;
 
     /// <summary>Gets the samples for a bundled histogram.</summary>
