@@ -274,7 +274,7 @@
       "metricsassertions.tunit": {
         "type": "Project",
         "dependencies": {
-          "MetricsAssertions": "[0.5.0, )",
+          "MetricsAssertions": "[0.4.0, )",
           "TUnit.Assertions": "[1.81.16, )",
           "TUnit.Core": "[1.81.16, )"
         }
@@ -524,7 +524,7 @@
       "metricsassertions.tunit": {
         "type": "Project",
         "dependencies": {
-          "MetricsAssertions": "[0.5.0, )",
+          "MetricsAssertions": "[0.4.0, )",
           "TUnit.Assertions": "[1.81.16, )",
           "TUnit.Core": "[1.81.16, )"
         }
