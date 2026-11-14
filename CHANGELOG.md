@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`TUnit.Assertions`** and **`TUnit.Core`** minimum versions raised from 1.77.0 to 1.85.0: 1.83.0 is the first TUnit with a `net11.0` asset, and 1.85.0 keeps TUnit's OpenTelemetry and ASP.NET Core packages on OpenTelemetry 1.20.x for `net10.0`, so a project with one version for all its TUnit packages gets no .NET 11 packages there.
 - **`HasAllSamplesInRange` and `HasSampleAverage`** now fail on a set with no samples, with a message that says so. They used to pass vacuously: nothing is in range of nothing, and the average of an empty set (reported as 0) matched an expected 0.
 - **Failure messages.** Every assertion now has an expectation message, so the "Expected ..." line says what the assertion checks and the "but ..." line describes only what was found, instead of repeating the expectation. For example `HasMeasurementCount(2)` on a capture with one measurement now reads `Expected to have 2 measurement(s)` / `but it had 1` / the dump of the captured measurements. The sample assertions (`HasSamples`, `HasSamplesInAnyOrder`) show the expected samples on the "but" line. There is no API change.
 - **README and XML documentation of capture isolation.** They now say that a keyed `[NotInParallel]` is not enough to isolate a test from a static meter (0.4.0 listed it as the remedy for that case) and put `InCurrentFlow()` first, then capture by `Meter` instance, a per-test `IMeterFactory` scope, a unique tag and an un-keyed `[NotInParallel]`.
