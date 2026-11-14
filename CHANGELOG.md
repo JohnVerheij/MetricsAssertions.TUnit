@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-15: flow-scoped capture, .NET 11, NaN and tolerance fixes
+
 ### Added
 
 - **`MeterCapture.InCurrentFlow()`** makes a capture record only the measurements emitted in the async flow of the code that calls it, and in the flows started from it afterwards (after an `await`, in `Task.Run`, `Parallel.ForEachAsync`, `ThreadPool.QueueUserWorkItem` and timers). Call it right after `For` and before the first `Add`: `MeterCapture.For("MyCompany.Orders").InCurrentFlow().Add<long>("orders.placed")`. Capture by name is process-wide and a keyed `[NotInParallel]` does not keep out the tests that carry another key; a flow-scoped capture does, and it attaches to every matching instrument in the process instead of the first only, so a meter created per test is not missed. It does not record a capture created inside an awaited async method, in a constructor or in a `[Before(Test)]` / `[Before(Class)]` hook (the marker does not reach the test body), nor code that was already running before the capture was created, nor a thread started with `ExecutionContext.SuppressFlow()`. When such a capture is empty while other flows emitted to the same instruments, the failure message says so.
@@ -132,7 +134,8 @@ capture and a first assertion. The full surface lands in 0.1.0.
 - **`MetricsAssertions.TUnit` (adapter):** `Assert.That(capture).HasMeasurementCount(n)`, generated
   via TUnit's `[GenerateAssertion]` source generator.
 
-[unreleased]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.4.0...HEAD
+[unreleased]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.1.0...v0.2.0
