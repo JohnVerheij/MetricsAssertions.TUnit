@@ -1,66 +1,65 @@
 [assembly: System.Reflection.AssemblyMetadata("IsAotCompatible", "True")]
 [assembly: System.Reflection.AssemblyMetadata("IsTrimmable", "True")]
 [assembly: System.Reflection.AssemblyMetadata("RepositoryUrl", "https://github.com/JohnVerheij/MetricsAssertions.TUnit")]
-[assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v10.0", FrameworkDisplayName=".NET 10.0")]
 namespace MetricsAssertions.TUnit
 {
     public static class InstrumentCaptureAssertions
     {
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have counter total {expected}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasCounterTotal(this MetricsAssertions.InstrumentCapture value, long expected) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have counter total of at least {expected}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasCounterTotalAtLeast(this MetricsAssertions.InstrumentCapture value, long expected) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have last value {expected}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasLastValue(this MetricsAssertions.InstrumentCapture value, double expected) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have last value {expected} (within {tolerance})", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasLastValue(this MetricsAssertions.InstrumentCapture value, double expected, double tolerance) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have {expected} measurement(s)", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasMeasurementCount(this MetricsAssertions.InstrumentCapture value, int expected) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have no measurements", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasNoMeasurements(this MetricsAssertions.InstrumentCapture value) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have a measurement tagged {tagKey}={tagValue}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasTaggedMeasurement(this MetricsAssertions.InstrumentCapture value, string tagKey, object? tagValue) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have up-down counter value {expected}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasUpDownCounterValue(this MetricsAssertions.InstrumentCapture value, long expected) { }
     }
     public static class MeasurementSetAssertions
     {
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have all samples within [{min}, {max}]", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasAllSamplesInRange(this MetricsAssertions.MeasurementSet value, double min, double max) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have counter total {expected}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasCounterTotal(this MetricsAssertions.MeasurementSet value, long expected) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have counter total of at least {expected}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasCounterTotalAtLeast(this MetricsAssertions.MeasurementSet value, long expected) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have every measurement tagged with {tagKey}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasEveryMeasurementTagged(this MetricsAssertions.MeasurementSet value, string tagKey) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have {expected} measurement(s)", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasMeasurementCount(this MetricsAssertions.MeasurementSet value, int expected) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have no measurements", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasNoMeasurements(this MetricsAssertions.MeasurementSet value) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have a sample average of {expected} (within {tolerance})", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasSampleAverage(this MetricsAssertions.MeasurementSet value, double expected, double tolerance = 0) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have a sample sum of {expected} (within {tolerance})", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasSampleSum(this MetricsAssertions.MeasurementSet value, double expected, double tolerance = 0) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have the expected samples in order", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasSamples(this MetricsAssertions.MeasurementSet value, params double[] expected) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have the expected samples in order, each within {tolerance}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasSamples(this MetricsAssertions.MeasurementSet value, System.Collections.Generic.IReadOnlyList<double> expected, double tolerance) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have the expected samples in any order", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasSamplesInAnyOrder(this MetricsAssertions.MeasurementSet value, params double[] expected) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have the expected samples in any order, each within {tolerance}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasSamplesInAnyOrder(this MetricsAssertions.MeasurementSet value, System.Collections.Generic.IReadOnlyList<double> expected, double tolerance) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have a measurement tagged {tagKey}={tagValue}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasTaggedMeasurement(this MetricsAssertions.MeasurementSet value, string tagKey, object? tagValue) { }
     }
     public static class MeterCaptureAssertions
     {
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have counter {instrumentName} total {expected}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasCounterTotal(this MetricsAssertions.MeterCapture value, string instrumentName, long expected) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have {expected} measurement(s) for {instrumentName}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasMeasurementCount(this MetricsAssertions.MeterCapture value, string instrumentName, int expected) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have a measurement for {instrumentName} tagged {tagKey}={tagValue}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasTaggedMeasurement(this MetricsAssertions.MeterCapture value, string instrumentName, string tagKey, object? tagValue) { }
-        [TUnit.Assertions.Attributes.GenerateAssertion]
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have up-down counter {instrumentName} value {expected}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasUpDownCounterValue(this MetricsAssertions.MeterCapture value, string instrumentName, long expected) { }
     }
 }

@@ -1,3 +1,5 @@
+using System;
+using System.Globalization;
 using MetricsAssertions;
 using TUnit.Assertions.Core;
 
@@ -20,4 +22,22 @@ internal static class MeasurementDiagnostics
     /// <returns>A failing <see cref="AssertionResult"/> carrying both.</returns>
     public static AssertionResult Failed(MeasurementSet captured, string expectation)
         => AssertionResult.Failed(string.Concat(expectation, "\n  captured:\n", captured.Describe()));
+
+    /// <summary>
+    /// Returns a failing result when the values of <paramref name="captured"/> sum to something no <see cref="long"/> can hold
+    /// (not a number, infinite, or beyond the range of a long), because <see cref="MeasurementSet.Total"/> throws
+    /// <see cref="OverflowException"/> for such a sum and a failed assertion should read as a failed assertion.
+    /// </summary>
+    /// <param name="captured">The measurements whose total an assertion is about to read.</param>
+    /// <returns>A failing <see cref="AssertionResult"/>, or <see langword="null"/> when the total can be read.</returns>
+    public static AssertionResult? TotalOutOfRange(MeasurementSet captured)
+    {
+        var sum = captured.Sum;
+        return double.IsNaN(sum) || sum >= LongRangeLimit || sum < -LongRangeLimit
+            ? Failed(captured, string.Concat("the values sum to ", sum.ToString(CultureInfo.InvariantCulture), ", which no long total can hold"))
+            : null;
+    }
+
+    /// <summary>The magnitude 2^63: a sum at or beyond it (below its negative) does not fit a <see cref="long"/>.</summary>
+    private const double LongRangeLimit = 9.2233720368547758E+18d;
 }

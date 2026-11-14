@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <RootNamespace>MetricsAssertions</RootNamespace>
     <AssemblyName>MetricsAssertions</AssemblyName>
     <IsPublishable>false</IsPublishable>
@@ -14,7 +14,7 @@
     <Version>0.4.0</Version>
     <Authors>John Verheij</Authors>
     <Copyright>Copyright (c) 2026 John Verheij</Copyright>
-    <Description>Framework-agnostic core for fluent metric-measurement assertions over System.Diagnostics.Metrics instruments in .NET test projects, built on the first-party MetricCollector testing primitive. Captures the measurements an instrument records into a disposable, per-test InstrumentCapture and projects them to a uniform CapturedMeasurement shape. Foundation release: meter-wide capture, observable and by-name capture, tag and delta queries, and the broader fluent assertions land in 0.1.0. Test-framework assertion entry points live in adapter packages (MetricsAssertions.TUnit). AOT-compatible, trimmable, no runtime reflection.</Description>
+    <Description>Framework-agnostic core for fluent metric-measurement assertions over System.Diagnostics.Metrics instruments in .NET test projects, built on the first-party MetricCollector testing primitive. Captures the measurements an instrument records into a disposable, per-test InstrumentCapture and projects them to a uniform CapturedMeasurement shape, with meter-wide, observable, by-name and per-flow capture, and tag and delta queries. Test-framework assertion entry points live in adapter packages (MetricsAssertions.TUnit). AOT-compatible, trimmable, no runtime reflection.</Description>
     <PackageTags>assertions;testing;metrics;diagnostics;instrumentation;metriccollector;dotnet;aot</PackageTags>
     <PackageProjectUrl>https://metricsassertions.dev</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
