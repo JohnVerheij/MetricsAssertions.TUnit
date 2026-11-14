@@ -31,7 +31,7 @@ public static class MeterCaptureAssertions
         MeasurementSet set = value[instrumentName].Measurements;
         if (set.Min < 0)
             return MeasurementDiagnostics.Failed(set, string.Concat(
-                instrumentName, " recorded a negative delta, which a counter never does"));
+                MeasurementDiagnostics.EscapeLineBreaks(instrumentName), " recorded a negative delta, which a counter never does"));
         if (MeasurementDiagnostics.TotalOutOfRange(set) is { } outOfRange)
             return outOfRange;
         return set.Total == expected
@@ -54,13 +54,14 @@ public static class MeterCaptureAssertions
         ArgumentNullException.ThrowIfNull(instrumentName);
         if (!value.Contains(instrumentName))
             return NotBundled(value, instrumentName);
-        MeasurementSet set = value[instrumentName].Measurements;
+        MeasurementSet all = value.Measurements;
+        MeasurementSet set = all.ForInstrument(instrumentName);
         if (MeasurementDiagnostics.TotalOutOfRange(set) is { } outOfRange)
             return outOfRange;
         var actual = set.Total;
         return actual == expected
             ? AssertionResult.Passed
-            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat("it was ", actual.ToString(CultureInfo.InvariantCulture)));
+            : MeasurementDiagnostics.Failed(all, string.Concat("it was ", actual.ToString(CultureInfo.InvariantCulture)));
     }
 
     /// <summary>Asserts the measurement count for a bundled instrument equals <paramref name="expected"/>.</summary>
@@ -77,10 +78,11 @@ public static class MeterCaptureAssertions
         ArgumentNullException.ThrowIfNull(instrumentName);
         if (!value.Contains(instrumentName))
             return NotBundled(value, instrumentName);
-        var actual = value.MeasurementCount(instrumentName);
+        MeasurementSet all = value.Measurements;
+        var actual = all.ForInstrument(instrumentName).Count;
         return actual == expected
             ? AssertionResult.Passed
-            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat("it had ", actual.ToString(CultureInfo.InvariantCulture)));
+            : MeasurementDiagnostics.Failed(all, string.Concat("it had ", actual.ToString(CultureInfo.InvariantCulture)));
     }
 
     /// <summary>Asserts a bundled instrument has at least one measurement tagged <paramref name="tagKey"/>
@@ -100,9 +102,10 @@ public static class MeterCaptureAssertions
         ArgumentNullException.ThrowIfNull(tagKey);
         if (!value.Contains(instrumentName))
             return NotBundled(value, instrumentName);
-        return value.HasMeasurementTagged(instrumentName, tagKey, tagValue)
+        MeasurementSet all = value.Measurements;
+        return all.ForInstrument(instrumentName).Tagged(tagKey, tagValue).Count > 0
             ? AssertionResult.Passed
-            : MeasurementDiagnostics.Failed(value.Measurements, "none matched");
+            : MeasurementDiagnostics.Failed(all, "none matched");
     }
 
     /// <summary>Builds the failure for an instrument name that was never added to the capture.</summary>
@@ -110,5 +113,5 @@ public static class MeterCaptureAssertions
     /// <param name="instrumentName">The instrument name that is not bundled.</param>
     /// <returns>A failing result naming the instrument and dumping what the capture holds.</returns>
     private static AssertionResult NotBundled(MeterCapture capture, string instrumentName)
-        => MeasurementDiagnostics.Failed(capture.Measurements, string.Concat("no instrument named ", instrumentName, " is bundled"));
+        => MeasurementDiagnostics.Failed(capture.Measurements, string.Concat("no instrument named ", MeasurementDiagnostics.EscapeLineBreaks(instrumentName), " is bundled"));
 }

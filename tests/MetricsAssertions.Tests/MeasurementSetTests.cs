@@ -178,4 +178,81 @@ internal sealed class MeasurementSetTests
         await Assert.That(text).Contains("a = 1");
         await Assert.That(text).Contains("b = 2 {k=v}");
     }
+
+    [Test]
+    public async Task Describe_WritesLineBreaksOfNamesAndTagsEscaped(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var set = new MeasurementSet(new[]
+        {
+            M("a\r\nb", 1, ("route\n", "/x\r\ny")),
+            M("c", 2),
+        });
+
+        string[] lines = set.Describe().Split('\n');
+
+        await Assert.That(lines.Length).IsEqualTo(2);
+        await Assert.That(lines[0]).StartsWith("    a\\r\\nb = 1 {route\\n=/x\\r\\ny} @ ");
+        await Assert.That(lines[1]).StartsWith("    c = 2 @ ");
+    }
+
+    [Test]
+    public async Task ToSnapshotString_RendersANullTagValueAsEmpty(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var set = new MeasurementSet(new[] { M("c", 2, ("k", null)) });
+
+        await Assert.That(set.ToSnapshotString()).IsEqualTo("c 2 {k=}\n");
+    }
+
+    [Test]
+    public async Task ToSnapshotString_WritesLineBreaksOfNamesAndTagsEscaped(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var set = new MeasurementSet(new[]
+        {
+            M("a\r\nb", 1, ("route\n", "/x\r\ny")),
+            M("c", 2),
+        });
+
+        await Assert.That(set.ToSnapshotString()).IsEqualTo("a\\r\\nb 1 {route\\n=/x\\r\\ny}\nc 2\n");
+    }
+
+    [Test]
+    public async Task Tagged_NullKey_ThrowsAlsoOnAnEmptySet(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+
+        await Assert.That(() => MeasurementSet.Empty.Tagged(null!, "v")).Throws<ArgumentNullException>();
+        await Assert.That(() => new MeasurementSet(new[] { M("h", 1d, ("k", "v")) }).Tagged(null!, "v")).Throws<ArgumentNullException>();
+    }
+
+    [Test]
+    public async Task SamplesEqual_WithTolerance_NeverMatchesNaN(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var set = new MeasurementSet(new[] { M("h", double.NaN) });
+
+        await Assert.That(set.SamplesEqual([1d], 1e-9)).IsFalse();
+        await Assert.That(set.SamplesEqual([double.NaN], 1e-9)).IsFalse();
+        await Assert.That(set.SamplesEquivalentTo([1d], 1e-9)).IsFalse();
+        await Assert.That(set.SamplesEquivalentTo([double.NaN], 1e-9)).IsFalse();
+    }
+
+    [Test]
+    public async Task SamplesEqual_WithTolerance_MatchesEqualInfinitiesOnly(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var set = new MeasurementSet(new[] { M("h", double.PositiveInfinity) });
+
+        await Assert.That(set.SamplesEqual([double.PositiveInfinity], 1e-9)).IsTrue();
+        await Assert.That(set.SamplesEqual([double.NegativeInfinity], 1e-9)).IsFalse();
+        await Assert.That(set.SamplesEqual([1d], 1e-9)).IsFalse();
+        await Assert.That(set.SamplesEquivalentTo([double.PositiveInfinity], 1e-9)).IsTrue();
+
+        var negative = new MeasurementSet(new[] { M("h", double.NegativeInfinity) });
+
+        await Assert.That(negative.SamplesEqual([double.NegativeInfinity], 1e-9)).IsTrue();
+        await Assert.That(negative.SamplesEqual([double.PositiveInfinity], 1e-9)).IsFalse();
+    }
 }
