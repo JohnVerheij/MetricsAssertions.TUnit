@@ -82,11 +82,16 @@ public sealed class MeasurementSet
     /// <summary>Returns the subset whose measurements carry a tag <paramref name="key"/> equal to <paramref name="value"/>.</summary>
     /// <param name="key">The tag key to match.</param>
     /// <param name="value">The tag value to match (string-compared invariantly).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>, also when the set is empty.</exception>
     public MeasurementSet Tagged(string key, object? value)
-        => new(All.Where(m => TagEquals(m, key, value)), IgnoredFromOtherFlows);
+    {
+        ArgumentNullException.ThrowIfNull(key);
+        return new(All.Where(m => TagEquals(m, key, value)), IgnoredFromOtherFlows);
+    }
 
     /// <summary>Returns the subset whose measurements carry all of the supplied tags.</summary>
     /// <param name="tags">The tags that must all be present and equal.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="tags"/> is <see langword="null"/>.</exception>
     public MeasurementSet Tagged(params (string Key, object? Value)[] tags)
     {
         ArgumentNullException.ThrowIfNull(tags);
@@ -95,6 +100,7 @@ public sealed class MeasurementSet
 
     /// <summary>Returns whether the values equal <paramref name="expected"/> in order.</summary>
     /// <param name="expected">The expected samples, in order.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="expected"/> is <see langword="null"/>.</exception>
     public bool SamplesEqual(params double[] expected)
     {
         ArgumentNullException.ThrowIfNull(expected);
@@ -105,6 +111,9 @@ public sealed class MeasurementSet
     /// <paramref name="tolerance"/> (absolute).</summary>
     /// <param name="expected">The expected samples, in order.</param>
     /// <param name="tolerance">The allowed absolute difference per sample, in the unit of the captured instrument.</param>
+    /// <remarks>A sample that is not a number never matches, whatever the expected value; an infinite sample matches an
+    /// equal infinity.</remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="expected"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> is negative or non-finite.</exception>
     public bool SamplesEqual(IReadOnlyList<double> expected, double tolerance)
     {
@@ -114,13 +123,29 @@ public sealed class MeasurementSet
         if (values.Count != expected.Count)
             return false;
         for (int i = 0; i < values.Count; i++)
-            if (Math.Abs(values[i] - expected[i]) > tolerance)
+            if (!WithinTolerance(values[i], expected[i], tolerance))
                 return false;
         return true;
     }
 
+    /// <summary>Returns whether <paramref name="actual"/> equals <paramref name="expected"/> within
+    /// <paramref name="tolerance"/>. A value that is not a number never matches, and equal infinities match.</summary>
+    /// <param name="actual">The measured value.</param>
+    /// <param name="expected">The expected value.</param>
+    /// <param name="tolerance">The allowed absolute difference, already validated as finite and non-negative.</param>
+    /// <returns><see langword="true"/> when the values are within the tolerance.</returns>
+    private static bool WithinTolerance(double actual, double expected, double tolerance)
+    {
+        if (double.IsFinite(actual))
+            return Math.Abs(actual - expected) <= tolerance;
+        if (double.IsPositiveInfinity(actual))
+            return double.IsPositiveInfinity(expected);
+        return double.IsNegativeInfinity(actual) && double.IsNegativeInfinity(expected);
+    }
+
     /// <summary>Returns whether the values equal <paramref name="expected"/> regardless of order.</summary>
     /// <param name="expected">The expected samples, in any order.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="expected"/> is <see langword="null"/>.</exception>
     public bool SamplesEquivalentTo(params double[] expected)
     {
         ArgumentNullException.ThrowIfNull(expected);
@@ -132,6 +157,9 @@ public sealed class MeasurementSet
     /// element by element, so equal counts and pairwise-within-tolerance values match.</summary>
     /// <param name="expected">The expected samples, in any order.</param>
     /// <param name="tolerance">The allowed absolute difference per sample, in the unit of the captured instrument.</param>
+    /// <remarks>A sample that is not a number never matches, whatever the expected value; an infinite sample matches an
+    /// equal infinity.</remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="expected"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> is negative or non-finite.</exception>
     public bool SamplesEquivalentTo(IReadOnlyList<double> expected, double tolerance)
     {
@@ -143,7 +171,7 @@ public sealed class MeasurementSet
         var sortedActual = values.Order().ToArray();
         var sortedExpected = expected.Order().ToArray();
         for (int i = 0; i < sortedActual.Length; i++)
-            if (Math.Abs(sortedActual[i] - sortedExpected[i]) > tolerance)
+            if (!WithinTolerance(sortedActual[i], sortedExpected[i], tolerance))
                 return false;
         return true;
     }
@@ -172,7 +200,9 @@ public sealed class MeasurementSet
 
     /// <summary>
     /// Returns a deterministic, human-readable projection of the set (one line per measurement, sorted by
-    /// instrument, value, then tags) suitable for snapshot-style baselines via a snapshot assertion library.
+    /// instrument, value, then tags) suitable for snapshot-style baselines via a snapshot assertion library. A carriage
+    /// return or line feed inside an instrument name, tag key or tag value is written as <c>\r</c> or <c>\n</c>, so every
+    /// measurement stays on one line.
     /// </summary>
     public string ToSnapshotString()
     {
@@ -182,7 +212,7 @@ public sealed class MeasurementSet
             .ThenBy(static m => m.Value)
             .ThenBy(FormatTags, StringComparer.Ordinal))
         {
-            sb.Append(m.InstrumentName).Append(' ')
+            sb.Append(EscapeLineBreaks(m.InstrumentName)).Append(' ')
                 .Append(m.Value.ToString(CultureInfo.InvariantCulture));
             var tags = FormatTags(m);
             if (tags.Length > 0)
@@ -196,7 +226,9 @@ public sealed class MeasurementSet
     /// <summary>
     /// Renders every measurement on its own line (instrument, value, tags, timestamp) in capture order for
     /// failure diagnostics, or a placeholder when the set is empty. Unlike <see cref="ToSnapshotString"/>
-    /// (sorted, for stable baselines), this preserves capture order and carries timestamps.
+    /// (sorted, for stable baselines), this preserves capture order and carries timestamps. A line break inside an
+    /// instrument name, tag key or tag value is written as <c>\r</c> or <c>\n</c>, so a measurement never spans two lines.
+    /// For a set built by a <see cref="MeterCapture"/>, the capture order is per instrument, in the order the instruments were added.
     /// </summary>
     public string Describe()
     {
@@ -216,7 +248,7 @@ public sealed class MeasurementSet
             if (i > 0)
                 sb.Append('\n');
             CapturedMeasurement m = All[i];
-            sb.Append("    ").Append(m.InstrumentName).Append(" = ")
+            sb.Append("    ").Append(EscapeLineBreaks(m.InstrumentName)).Append(" = ")
                 .Append(m.Value.ToString(CultureInfo.InvariantCulture));
             string tags = FormatTags(m);
             if (tags.Length > 0)
@@ -237,5 +269,12 @@ public sealed class MeasurementSet
     private static string FormatTags(CapturedMeasurement measurement)
         => string.Join(',', measurement.Tags
             .OrderBy(static t => t.Key, StringComparer.Ordinal)
-            .Select(static t => $"{t.Key}={Convert.ToString(t.Value, CultureInfo.InvariantCulture)}"));
+            .Select(static t => $"{EscapeLineBreaks(t.Key)}={EscapeLineBreaks(Convert.ToString(t.Value, CultureInfo.InvariantCulture)!)}"));
+
+    /// <summary>Writes a carriage return and a line feed as the two characters <c>\r</c> and <c>\n</c>, so a captured instrument
+    /// name, tag key or tag value that holds a line break cannot split the one line a measurement is rendered on.</summary>
+    /// <param name="text">The captured text (never <see langword="null"/>: <see cref="Convert.ToString(object?, IFormatProvider?)"/> turns a null tag value into an empty string).</param>
+    /// <returns>The text on one line.</returns>
+    private static string EscapeLineBreaks(string text)
+        => text.Replace("\r", "\\r", StringComparison.Ordinal).Replace("\n", "\\n", StringComparison.Ordinal);
 }

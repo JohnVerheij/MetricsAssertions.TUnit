@@ -57,7 +57,7 @@ dotnet add package MetricsAssertions.TUnit
 dotnet add package MetricsAssertions
 ```
 
-**Requirements:** TUnit 1.81.16 or later, .NET 10 or .NET 11. AOT-compatible, trimmable.
+**Requirements:** TUnit 1.85.0 or later, .NET 10 or .NET 11. AOT-compatible, trimmable.
 
 ## Package layout
 
@@ -155,8 +155,8 @@ Assertions on `Assert.That(set)` where `set` is a `MeasurementSet` (e.g. `captur
 |---|---|
 | `HasCounterTotal(n)` / `HasCounterTotalAtLeast(n)` | The net total equals / is at least `n`. |
 | `HasMeasurementCount(n)` / `HasNoMeasurements()` | The set holds exactly `n` measurements / is empty. |
-| `HasSampleSum(v, tolerance?)` / `HasSampleAverage(v, tolerance?)` | The histogram sample sum / mean equals `v` within an optional tolerance. |
-| `HasAllSamplesInRange(min, max)` | Every sample lies within the inclusive range. |
+| `HasSampleSum(v, tolerance?)` / `HasSampleAverage(v, tolerance?)` | The histogram sample sum / mean equals `v` within an optional tolerance. `HasSampleAverage` fails on an empty set (the average of nothing is undefined). |
+| `HasAllSamplesInRange(min, max)` | Every sample lies within the inclusive range. Fails on an empty set. |
 | `HasSamples(...)` / `HasSamplesInAnyOrder(...)` | The samples equal the expected values, in order / in any order. A `(IReadOnlyList<double> expected, double tolerance)` overload of each compares within an absolute per-sample tolerance. |
 | `HasEveryMeasurementTagged(key)` | Every measurement carries a tag with the given key. |
 | `HasTaggedMeasurement(key, value)` | At least one measurement carries the tag `key = value`. |
@@ -266,6 +266,10 @@ Every measurement's value is projected to `double` (via `Convert.ToDouble`) so h
 Values keep the unit of the instrument (seconds for `http.client.request.duration`, bytes for a size histogram): the capture converts nothing, and tolerances, sums and ranges are in that unit.
 
 Counter totals are evaluated as integers: `MeasurementSet.Total` (and the `HasCounterTotal` assertions over it) round the sum to a `long` with banker's rounding, so a `Counter<double>` with a fractional total is compared as an integer. For an exact fractional total, compare `Sum` directly or use `HasSampleSum(expected, tolerance)`. A sum that no `long` can hold (not a number, infinite, or from a counter that recorded `long.MaxValue`, which sums to 2^63 as a `double`) makes `Total` throw `OverflowException`; the `HasCounterTotal*` and `HasUpDownCounterValue` assertions fail with a message instead.
+
+Tolerance comparisons never match a value that is not a number (a `NaN` sample, sum, average or last value fails whatever is expected), and an infinite value matches only the equal infinity. The exact `HasSamples(...)` and `HasLastValue(v)` compare with `double.Equals`, so `NaN` equals `NaN` there.
+
+A carriage return or line feed inside an instrument name, tag key or tag value is written as `\r` or `\n` in the failure dump, `MeasurementSet.Describe()` and `ToSnapshotString()`, so every measurement stays on one line.
 
 Tag values are compared as invariant text: for a tag whose value is the `bool` `true`, `Tagged("ok", true)` and `Tagged("ok", "True")` match and `Tagged("ok", "true")` does not, and a `null` tag value equals an empty string.
 

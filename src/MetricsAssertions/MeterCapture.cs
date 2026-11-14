@@ -56,6 +56,7 @@ public sealed class MeterCapture : IDisposable
     /// directly (<c>new Meter(name)</c>, no scope), on the system clock. For a meter created by an
     /// <see cref="IMeterFactory"/>, use <see cref="For(string, object?)"/>.</summary>
     /// <param name="meterName">The meter name to capture.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="meterName"/> is <see langword="null"/>.</exception>
     public static MeterCapture For(string meterName)
         => Create(meterName, meterScope: null, timeProvider: null);
 
@@ -65,6 +66,7 @@ public sealed class MeterCapture : IDisposable
     /// <param name="meterName">The meter name to capture.</param>
     /// <param name="timeProvider">The clock for the measurement timestamps of every bundled instrument,
     /// or <see langword="null"/> for the system clock.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="meterName"/> is <see langword="null"/>.</exception>
     public static MeterCapture For(string meterName, TimeProvider? timeProvider)
         => Create(meterName, meterScope: null, timeProvider);
 
@@ -74,6 +76,7 @@ public sealed class MeterCapture : IDisposable
     /// directly-created meter and would capture nothing from a factory-created one.</summary>
     /// <param name="meterName">The meter name to capture.</param>
     /// <param name="meterScope">The meter scope to match (the <c>IMeterFactory</c> instance, or null).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="meterName"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException"><paramref name="meterScope"/> is a <see cref="TimeProvider"/>
     /// or a <see cref="Meter"/>, almost always passed there by mistake. Capture a meter whose scope really is one
     /// of these by instance with <see cref="For(Meter)"/>.</exception>
@@ -87,6 +90,7 @@ public sealed class MeterCapture : IDisposable
     /// <param name="meterScope">The meter scope to match (the <c>IMeterFactory</c> instance, or null).</param>
     /// <param name="timeProvider">The clock for the measurement timestamps of every bundled instrument,
     /// or <see langword="null"/> for the system clock.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="meterName"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException"><paramref name="meterScope"/> is a <see cref="TimeProvider"/>
     /// or a <see cref="Meter"/>, almost always passed there by mistake. Capture a meter whose scope really is one
     /// of these by instance with <see cref="For(Meter)"/>.</exception>
@@ -97,6 +101,7 @@ public sealed class MeterCapture : IDisposable
     /// system clock. Unlike capture by name, another meter with the same name and scope (for example one
     /// created by a test running in parallel) is not captured.</summary>
     /// <param name="meter">The meter instance to capture.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="meter"/> is <see langword="null"/>.</exception>
     public static MeterCapture For(Meter meter) => For(meter, timeProvider: null);
 
     /// <summary>Begins building a capture for the instruments of <paramref name="meter"/> itself, with
@@ -105,6 +110,7 @@ public sealed class MeterCapture : IDisposable
     /// <param name="meter">The meter instance to capture.</param>
     /// <param name="timeProvider">The clock for the measurement timestamps of every bundled instrument,
     /// or <see langword="null"/> for the system clock.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="meter"/> is <see langword="null"/>.</exception>
     public static MeterCapture For(Meter meter, TimeProvider? timeProvider)
     {
         ArgumentNullException.ThrowIfNull(meter);
@@ -122,6 +128,7 @@ public sealed class MeterCapture : IDisposable
     /// on the capture's clock.</summary>
     /// <typeparam name="T">The instrument's value type.</typeparam>
     /// <param name="instrumentName">The instrument name.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="instrumentName"/> is <see langword="null"/>.</exception>
     public MeterCapture Add<T>(string instrumentName) where T : struct
     {
         ArgumentNullException.ThrowIfNull(instrumentName);
@@ -140,6 +147,7 @@ public sealed class MeterCapture : IDisposable
     /// <summary>Adds the referenceable instrument to the bundle, on the capture's clock.</summary>
     /// <typeparam name="T">The instrument's value type.</typeparam>
     /// <param name="instrument">The instrument to capture.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="instrument"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException"><paramref name="instrument"/> belongs to a different meter than the
     /// captured one.</exception>
     public MeterCapture Add<T>(Instrument<T> instrument) where T : struct
@@ -195,6 +203,8 @@ public sealed class MeterCapture : IDisposable
 
     /// <summary>Gets the per-instrument capture for <paramref name="instrumentName"/>.</summary>
     /// <param name="instrumentName">The instrument name added to the bundle.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="instrumentName"/> is <see langword="null"/>.</exception>
+    /// <exception cref="KeyNotFoundException">No instrument named <paramref name="instrumentName"/> was added; see <see cref="Contains"/>.</exception>
     public InstrumentCapture this[string instrumentName] => _instruments[instrumentName];
 
     /// <summary>Returns whether an instrument named <paramref name="instrumentName"/> is bundled.</summary>
@@ -205,7 +215,10 @@ public sealed class MeterCapture : IDisposable
         return _instruments.ContainsKey(instrumentName);
     }
 
-    /// <summary>Gets every captured measurement across all bundled instruments as a queryable, assertable set.</summary>
+    /// <summary>Gets every captured measurement across all bundled instruments as a queryable, assertable set. The
+    /// measurements are grouped by instrument, in the order the instruments were added, and in arrival order within an
+    /// instrument; the set does not interleave instruments by time. Each instrument is read in its own snapshot, so
+    /// measurements that arrive while the set is built can show in one instrument and not in another.</summary>
     public MeasurementSet Measurements
         => new(_instruments.Values.SelectMany(static i => i.Measurements.All), _instruments.Values.Sum(static i => i.IgnoredFromOtherFlows));
 
@@ -218,22 +231,30 @@ public sealed class MeterCapture : IDisposable
 
     /// <summary>Gets the net total for a bundled counter / up-down counter.</summary>
     /// <param name="instrumentName">The instrument name.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="instrumentName"/> is <see langword="null"/>.</exception>
+    /// <exception cref="KeyNotFoundException">No instrument named <paramref name="instrumentName"/> was added.</exception>
     /// <exception cref="OverflowException">The values sum to something no <see cref="long"/> can hold; see
     /// <see cref="MeasurementSet.Total"/>.</exception>
     public long CounterTotal(string instrumentName) => _instruments[instrumentName].Total;
 
     /// <summary>Gets the samples for a bundled histogram.</summary>
     /// <param name="instrumentName">The instrument name.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="instrumentName"/> is <see langword="null"/>.</exception>
+    /// <exception cref="KeyNotFoundException">No instrument named <paramref name="instrumentName"/> was added.</exception>
     public IReadOnlyList<double> Samples(string instrumentName) => _instruments[instrumentName].Measurements.Values;
 
     /// <summary>Gets the measurement count for a bundled instrument.</summary>
     /// <param name="instrumentName">The instrument name.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="instrumentName"/> is <see langword="null"/>.</exception>
+    /// <exception cref="KeyNotFoundException">No instrument named <paramref name="instrumentName"/> was added.</exception>
     public int MeasurementCount(string instrumentName) => _instruments[instrumentName].Count;
 
     /// <summary>Returns whether a bundled instrument has a measurement tagged <paramref name="tagKey"/>=<paramref name="tagValue"/>.</summary>
     /// <param name="instrumentName">The instrument name.</param>
     /// <param name="tagKey">The tag key to match.</param>
     /// <param name="tagValue">The tag value to match.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="instrumentName"/> is <see langword="null"/>.</exception>
+    /// <exception cref="KeyNotFoundException">No instrument named <paramref name="instrumentName"/> was added.</exception>
     public bool HasMeasurementTagged(string instrumentName, string tagKey, object? tagValue)
         => _instruments[instrumentName].HasMeasurementTagged(tagKey, tagValue);
 
