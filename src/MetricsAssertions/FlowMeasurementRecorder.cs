@@ -76,17 +76,25 @@ internal sealed class FlowMeasurementRecorder<T> : IDisposable where T : struct
     {
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var waiter = new Waiter(count, completion, cancellationToken);
-        lock (_gate)
-        {
-            if (_measurements.Count >= count)
-                return Task.CompletedTask;
-            _waiters.Add(waiter);
-        }
 
+        // Register before an emitter can see the waiter, so the registration an emitter removes is always the real one. A
+        // token that is already canceled runs Cancel here, which completes the wait as canceled.
         if (cancellationToken.CanBeCanceled)
             waiter.Registration = cancellationToken.Register(() => Cancel(waiter));
 
-        return completion.Task;
+        bool reached;
+        lock (_gate)
+        {
+            reached = _measurements.Count >= count;
+            if (!reached && !completion.Task.IsCompleted)
+            {
+                _waiters.Add(waiter);
+                return completion.Task;
+            }
+        }
+
+        waiter.Registration.Unregister();
+        return reached ? Task.CompletedTask : completion.Task;
     }
 
     /// <summary>Stops the listener: no measurement is recorded after this call.</summary>
@@ -101,9 +109,12 @@ internal sealed class FlowMeasurementRecorder<T> : IDisposable where T : struct
     /// <param name="waiter">The wait whose token was canceled.</param>
     private void Cancel(Waiter waiter)
     {
+        // Under the gate, so a wait canceled while WaitAsync registers is never added to the pending list.
         lock (_gate)
+        {
             _waiters.Remove(waiter);
-        waiter.Completion.TrySetCanceled(waiter.Token);
+            waiter.Completion.TrySetCanceled(waiter.Token);
+        }
     }
 
     private void OnMeasurement(Instrument instrument, T measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)

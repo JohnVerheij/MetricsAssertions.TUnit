@@ -129,25 +129,33 @@ internal sealed class FlowScopedCaptureTests
             done.Signal();
         });
         service.Start();
-        started.Wait(ct);
-
-        using var capture = NewCapture();
-
-        // A thread started with the execution context suppressed does not carry the marker.
-        using (ExecutionContext.SuppressFlow())
+        try
         {
-            var suppressed = new Thread(() => Emit(7, "suppressed"));
-            suppressed.Start();
-            suppressed.Join();
+            started.Wait(ct);
+
+            using var capture = NewCapture();
+
+            // A thread started with the execution context suppressed does not carry the marker.
+            using (ExecutionContext.SuppressFlow())
+            {
+                var suppressed = new Thread(() => Emit(7, "suppressed"));
+                suppressed.Start();
+                suppressed.Join();
+            }
+
+            release.Set();
+            done.Wait(ct);
+            Emit(2, "own");
+
+            await Assert.That(capture.CounterTotal("flow.hits")).IsEqualTo(2L);
+            await Assert.That(capture.Measurements.IsEmpty).IsFalse();
         }
-
-        release.Set();
-        done.Wait(ct);
-        service.Join();
-        Emit(2, "own");
-
-        await Assert.That(capture.CounterTotal("flow.hits")).IsEqualTo(2L);
-        await Assert.That(capture.Measurements.IsEmpty).IsFalse();
+        finally
+        {
+            // On every exit path the service ends before its events are disposed: it signals done as its last step.
+            release.Set();
+            service.Join();
+        }
     }
 
     [Test]

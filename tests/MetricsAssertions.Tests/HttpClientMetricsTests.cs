@@ -41,19 +41,25 @@ internal sealed class HttpClientMetricsTests
         var beforePull = capture.MeasurementCount("http.client.open_connections");
         capture.RecordObservable();
 
-        release.SetResult();
-        await server;
-
-        await Assert.That(body).IsEqualTo("ok");
+        // Assert while the server still holds the connection: once it closes, .NET 10 records the close as a measurement.
+        try
+        {
+            await Assert.That(body).IsEqualTo("ok");
 #if NET11_0_OR_GREATER
-        // Observable on .NET 11: nothing is recorded until RecordObservable pulls the current value.
-        await Assert.That(beforePull).IsEqualTo(0);
-        await Assert.That(capture.CounterTotal("http.client.open_connections")).IsEqualTo(1L);
-        await Assert.That(capture["http.client.open_connections"].Measurements.All.All(m => m.Tags.ContainsKey("http.connection.state"))).IsTrue();
+            // Observable on .NET 11: nothing is recorded until RecordObservable pulls the current value.
+            await Assert.That(beforePull).IsEqualTo(0);
+            await Assert.That(capture.CounterTotal("http.client.open_connections")).IsEqualTo(1L);
+            await Assert.That(capture["http.client.open_connections"].Measurements.All.All(m => m.Tags.ContainsKey("http.connection.state"))).IsTrue();
 #else
-        // An up-down counter before .NET 11: the measurements were recorded while the request ran.
-        await Assert.That(beforePull).IsGreaterThan(0);
-        await Assert.That(capture.MeasurementCount("http.client.open_connections")).IsEqualTo(beforePull);
+            // An up-down counter before .NET 11: the measurements were recorded while the request ran.
+            await Assert.That(beforePull).IsGreaterThan(0);
+            await Assert.That(capture.MeasurementCount("http.client.open_connections")).IsEqualTo(beforePull);
 #endif
+        }
+        finally
+        {
+            release.SetResult();
+            await server;
+        }
     }
 }

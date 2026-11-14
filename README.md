@@ -271,7 +271,7 @@ Tag values are compared as invariant text: for a tag whose value is the `bool` `
 
 ### Assertions are kind-named, not kind-checked
 
-The capture is typed by the instrument's value type (`T`), not its kind, and every value is projected to `double`, so the assertion surface is uniform across counters, histograms, and gauges. The kind-named terminators (`HasCounterTotal`, `HasSampleSum`, `HasLastValue`) signal intent but do not enforce it: calling `HasSampleSum` on a counter capture, or `HasCounterTotal` on a histogram, computes a defined but meaningless number rather than refusing to apply. Metric tests are normally written by whoever created the instrument, so this is a deliberate simplicity-over-safety tradeoff. As a partial guard, `HasCounterTotal` and `HasCounterTotalAtLeast` reject negative deltas, since a true counter never decrements; `HasUpDownCounterValue` does not, because an up-down counter does.
+The capture is typed by the instrument's value type (`T`), not its kind, and every value is projected to `double`, so the assertion surface is uniform across counters, histograms, and gauges. The kind-named terminators (`HasCounterTotal`, `HasSampleSum`, `HasLastValue`) signal intent but do not enforce it: calling `HasSampleSum` on a counter capture, or `HasCounterTotal` on a histogram, computes a defined but meaningless number rather than refusing to apply. Metric tests are normally written by whoever created the instrument, so this is a deliberate simplicity-over-safety tradeoff. As a partial guard, `HasCounterTotal` and `HasCounterTotalAtLeast` reject negative deltas, since a true counter never decrements; `HasUpDownCounterValue` does not, because an up-down counter does. Enforcing kind end to end (a capture that remembers its instrument kind) is a post-1.0 consideration.
 
 ### An instrument that never existed reads as "nothing emitted"
 
@@ -292,7 +292,7 @@ await client.GetStringAsync(url);
 capture.RecordObservable();
 
 await Assert.That(capture.CounterTotal("http.client.open_connections")).IsEqualTo(1);
-``` Enforcing kind end to end (a capture that remembers its instrument kind) is a post-1.0 consideration.
+```
 
 ## Stability intent (pre-1.0)
 
