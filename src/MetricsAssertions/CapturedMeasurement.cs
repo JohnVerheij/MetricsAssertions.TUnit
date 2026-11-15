@@ -15,7 +15,8 @@ namespace MetricsAssertions;
 /// converts nothing. <see cref="double"/> represents integers exactly only up to 2^53 and cannot represent every decimal exactly, so an
 /// exact-equality assertion on a very large <see langword="long"/> counter or a <see langword="decimal"/>
 /// (for example money-as-metric) histogram can surprise; prefer the tolerance-based sample assertions for
-/// non-integer values.
+/// non-integer values. A <see langword="float"/> measurement is widened to <see cref="double"/> exactly, so the <see langword="float"/>
+/// nearest 0.1 reads as 0.10000000149011612 (and shows so in a failure message).
 /// </param>
 /// <param name="Tags">The tags attached to the measurement (empty when none).</param>
 /// <param name="Timestamp">The time the measurement was collected (from the capturing collector's clock).</param>

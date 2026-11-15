@@ -83,9 +83,10 @@ public static class InstrumentCaptureAssertions
     public static AssertionResult HasMeasurementCount(this InstrumentCapture value, int expected)
     {
         ArgumentNullException.ThrowIfNull(value);
-        return value.Count == expected
+        MeasurementSet set = value.Measurements;
+        return set.Count == expected
             ? AssertionResult.Passed
-            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat("it had ", value.Count.ToString(CultureInfo.InvariantCulture)));
+            : MeasurementDiagnostics.Failed(set, string.Concat("it had ", set.Count.ToString(CultureInfo.InvariantCulture)));
     }
 
     /// <summary>Asserts that no measurements were captured.</summary>
@@ -96,9 +97,10 @@ public static class InstrumentCaptureAssertions
     public static AssertionResult HasNoMeasurements(this InstrumentCapture value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        return value.Count is 0
+        MeasurementSet set = value.Measurements;
+        return set.IsEmpty
             ? AssertionResult.Passed
-            : MeasurementDiagnostics.Failed(value.Measurements, string.Concat("it had ", value.Count.ToString(CultureInfo.InvariantCulture)));
+            : MeasurementDiagnostics.Failed(set, string.Concat("it had ", set.Count.ToString(CultureInfo.InvariantCulture)));
     }
 
     /// <summary>Asserts the most recently captured value equals <paramref name="expected"/>.</summary>
@@ -115,9 +117,10 @@ public static class InstrumentCaptureAssertions
     public static AssertionResult HasLastValue(this InstrumentCapture value, double expected)
     {
         ArgumentNullException.ThrowIfNull(value);
-        return value.LastValue is { } last && last.Equals(expected)
+        MeasurementSet set = value.Measurements;
+        return set.LastValue is { } last && last.Equals(expected)
             ? AssertionResult.Passed
-            : MeasurementDiagnostics.Failed(value.Measurements, LastValueActual(value));
+            : MeasurementDiagnostics.Failed(set, LastValueActual(set));
     }
 
     /// <summary>Asserts the most recently captured value equals <paramref name="expected"/> within
@@ -129,6 +132,7 @@ public static class InstrumentCaptureAssertions
     /// <returns>A passing assertion when the last value is within tolerance; otherwise a failing one
     /// (also failing when no measurements were captured).</returns>
     /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <remarks>A last value that is not a number never matches; an infinite last value matches an equal infinity.</remarks>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> is negative or
     /// non-finite.</exception>
     [GenerateAssertion(ExpectationMessage = "to have last value {expected} (within {tolerance})", InlineMethodBody = false)]
@@ -137,16 +141,17 @@ public static class InstrumentCaptureAssertions
         ArgumentNullException.ThrowIfNull(value);
         if (!double.IsFinite(tolerance) || tolerance < 0)
             throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, "Tolerance must be a finite, non-negative number.");
-        return value.LastValue is { } last && Math.Abs(last - expected) <= tolerance
+        MeasurementSet set = value.Measurements;
+        return set.LastValue is { } last && MeasurementDiagnostics.WithinTolerance(last, expected, tolerance)
             ? AssertionResult.Passed
-            : MeasurementDiagnostics.Failed(value.Measurements, LastValueActual(value));
+            : MeasurementDiagnostics.Failed(set, LastValueActual(set));
     }
 
-    /// <summary>Describes the last captured value for a failure message.</summary>
-    /// <param name="capture">The capture the assertion ran on.</param>
+    /// <summary>Describes the last value of a snapshot for a failure message.</summary>
+    /// <param name="set">The snapshot the assertion ran on, the same one the failure lists.</param>
     /// <returns>The last value, or a statement that nothing was captured.</returns>
-    private static string LastValueActual(InstrumentCapture capture)
-        => capture.LastValue is { } last
+    private static string LastValueActual(MeasurementSet set)
+        => set.LastValue is { } last
             ? string.Concat("it was ", last.ToString(CultureInfo.InvariantCulture))
             : "it had no measurements";
 
@@ -163,8 +168,9 @@ public static class InstrumentCaptureAssertions
     {
         ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(tagKey);
-        return value.HasMeasurementTagged(tagKey, tagValue)
+        MeasurementSet set = value.Measurements;
+        return set.Tagged(tagKey, tagValue).Count > 0
             ? AssertionResult.Passed
-            : MeasurementDiagnostics.Failed(value.Measurements, "none matched");
+            : MeasurementDiagnostics.Failed(set, "none matched");
     }
 }

@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-15: flow-scoped capture, .NET 11, NaN and tolerance fixes
+
 ### Added
 
 - **`MeterCapture.InCurrentFlow()`** makes a capture record only the measurements emitted in the async flow of the code that calls it, and in the flows started from it afterwards (after an `await`, in `Task.Run`, `Parallel.ForEachAsync`, `ThreadPool.QueueUserWorkItem` and timers). Call it right after `For` and before the first `Add`: `MeterCapture.For("MyCompany.Orders").InCurrentFlow().Add<long>("orders.placed")`. Capture by name is process-wide and a keyed `[NotInParallel]` does not keep out the tests that carry another key; a flow-scoped capture does, and it attaches to every matching instrument in the process instead of the first only, so a meter created per test is not missed. It does not record a capture created inside an awaited async method, in a constructor or in a `[Before(Test)]` / `[Before(Class)]` hook (the marker does not reach the test body), nor code that was already running before the capture was created, nor a thread started with `ExecutionContext.SuppressFlow()`. When such a capture is empty while other flows emitted to the same instruments, the failure message says so.
@@ -22,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`TUnit.Assertions`** and **`TUnit.Core`** minimum versions raised from 1.77.0 to 1.85.0: 1.83.0 is the first TUnit with a `net11.0` asset, and 1.85.0 keeps TUnit's OpenTelemetry and ASP.NET Core packages on OpenTelemetry 1.20.x for `net10.0`, so a project with one version for all its TUnit packages gets no .NET 11 packages there.
+- **`HasAllSamplesInRange` and `HasSampleAverage`** now fail on a set with no samples, with a message that says so. They used to pass vacuously: nothing is in range of nothing, and the average of an empty set (reported as 0) matched an expected 0.
 - **Failure messages.** Every assertion now has an expectation message, so the "Expected ..." line says what the assertion checks and the "but ..." line describes only what was found, instead of repeating the expectation. For example `HasMeasurementCount(2)` on a capture with one measurement now reads `Expected to have 2 measurement(s)` / `but it had 1` / the dump of the captured measurements. The sample assertions (`HasSamples`, `HasSamplesInAnyOrder`) show the expected samples on the "but" line. There is no API change.
 - **README and XML documentation of capture isolation.** They now say that a keyed `[NotInParallel]` is not enough to isolate a test from a static meter (0.4.0 listed it as the remedy for that case) and put `InCurrentFlow()` first, then capture by `Meter` instance, a per-test `IMeterFactory` scope, a unique tag and an un-keyed `[NotInParallel]`.
 - **Documentation.** The adapter README lists all 25 assertions and the family; the core README names the members of `MeterCapture` and `MeterInspector`; the READMEs state that values keep the unit of the instrument, that tag values compare as invariant text (a `null` tag value equals an empty string), that `HasCounterTotal` and `HasCounterTotalAtLeast` reject negative deltas while `HasUpDownCounterValue` does not, that an instrument that never existed reads as "nothing emitted" (check with `MeterInspector.IsPublished`), and that on .NET 11 the `http.client.open_connections` and `http.client.active_requests` metrics are observable instruments, so a capture of them needs `RecordObservable()`. The README sample that drives a capture with a fake clock now names the package that provides `FakeTimeProvider`, `Microsoft.Extensions.TimeProvider.Testing`.
@@ -30,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`HasCounterTotal`, `HasCounterTotalAtLeast` and `HasUpDownCounterValue`** threw `OverflowException` when the values summed to something no `long` can hold (`NaN`, infinity, or a counter that recorded `long.MaxValue`). They now fail the assertion with a message that names the sum. `MeasurementSet.Total`, `InstrumentCapture.Total` and `MeterCapture.CounterTotal` still throw `OverflowException` for such a sum, now documented.
 - **`InstrumentCapture.WaitForAsync`** on a disposed capture waited until its token was canceled, or forever without one. It now throws `ObjectDisposedException`, as every other read of a disposed capture does.
+- **`MeasurementSet.SamplesEqual(expected, tolerance)`, `SamplesEquivalentTo(expected, tolerance)` and the tolerance assertions** matched a `NaN` sample against any expected value (the comparison was `difference > tolerance`, which is false for `NaN`), and an infinite sum, average or last value never matched the equal infinity in `HasSampleSum`, `HasSampleAverage` and `HasLastValue`. A `NaN` now never matches within a tolerance, and equal infinities match. This covers `HasSamples`, `HasSamplesInAnyOrder`, `HasSampleSum`, `HasSampleAverage` and `HasLastValue` with a tolerance.
+- **`MeasurementSet.Describe()`, `ToSnapshotString()` and the failure messages** wrote a carriage return or line feed in an instrument name, tag key or tag value as it was, which split one measurement over several lines. It is now written as `\r` or `\n`, and a backslash as `\\`, so a snapshot tells a real line break from a backslash followed by `n`. Text without a line break or a backslash renders as before; a baseline with a backslash in a name or a tag value, such as a Windows path, has to be accepted again.
+- **Failure messages of `HasMeasurementCount`, `HasNoMeasurements`, `HasLastValue`, `HasTaggedMeasurement` and `HasUpDownCounterValue`** read the count or value from one snapshot of the capture and listed the measurements from a second one, so a capture that kept receiving measurements could say `it had 3` above four lines. The claim and the listing now come from the same snapshot.
+- **A tag value whose `ToString()` returns `null`** now compares as an empty string, as a `null` tag value does, so `Tagged(key, null)` and `Tagged(key, "")` match it; it matched neither.
+- **`MeasurementSet.Tagged(key, value)`** threw `ArgumentNullException` for a null `key` only when the set was not empty. It now throws on an empty set too.
 
 ## [0.4.0] - 2026-11-01: the capture takes the clock; capture per Meter instance
 
@@ -126,7 +135,8 @@ capture and a first assertion. The full surface lands in 0.1.0.
 - **`MetricsAssertions.TUnit` (adapter):** `Assert.That(capture).HasMeasurementCount(n)`, generated
   via TUnit's `[GenerateAssertion]` source generator.
 
-[unreleased]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.4.0...HEAD
+[unreleased]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.1.0...v0.2.0

@@ -108,16 +108,19 @@ public static class MeasurementSetAssertions
     /// <param name="value">The measurement set.</param>
     /// <param name="expected">The expected sum, in the unit of the captured instrument.</param>
     /// <param name="tolerance">The allowed absolute difference, in the unit of the captured instrument (exact by default).</param>
+    /// <remarks>A sum that is not a number never matches; an infinite sum matches an equal infinity.</remarks>
     /// <returns>A passing assertion when the sum is within tolerance; otherwise a failing one.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> is negative or non-finite.</exception>
     [GenerateAssertion(ExpectationMessage = "to have a sample sum of {expected} (within {tolerance})", InlineMethodBody = false)]
     public static AssertionResult HasSampleSum(this MeasurementSet value, double expected, double tolerance = 0d)
     {
         ArgumentNullException.ThrowIfNull(value);
         ValidateTolerance(tolerance);
-        return Math.Abs(value.Sum - expected) <= tolerance
+        var sum = value.Sum;
+        return MeasurementDiagnostics.WithinTolerance(sum, expected, tolerance)
             ? AssertionResult.Passed
-            : MeasurementDiagnostics.Failed(value, string.Concat("it was ", Num(value.Sum)));
+            : MeasurementDiagnostics.Failed(value, string.Concat("it was ", Num(sum)));
     }
 
     /// <summary>Asserts the mean of the histogram samples equals <paramref name="expected"/> (within
@@ -125,16 +128,21 @@ public static class MeasurementSetAssertions
     /// <param name="value">The measurement set.</param>
     /// <param name="expected">The expected average.</param>
     /// <param name="tolerance">The allowed absolute difference, in the unit of the captured instrument (exact by default).</param>
+    /// <remarks>A set with no samples fails: the average of nothing is undefined, and <see cref="MeasurementSet.Average"/> reports 0 for it, which would match an expected 0. An average that is not a number never matches.</remarks>
     /// <returns>A passing assertion when the average is within tolerance; otherwise a failing one.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="tolerance"/> is negative or non-finite.</exception>
     [GenerateAssertion(ExpectationMessage = "to have a sample average of {expected} (within {tolerance})", InlineMethodBody = false)]
     public static AssertionResult HasSampleAverage(this MeasurementSet value, double expected, double tolerance = 0d)
     {
         ArgumentNullException.ThrowIfNull(value);
         ValidateTolerance(tolerance);
-        return Math.Abs(value.Average - expected) <= tolerance
+        if (value.IsEmpty)
+            return MeasurementDiagnostics.Failed(value, "it had no samples, so there is no average");
+        var average = value.Average;
+        return MeasurementDiagnostics.WithinTolerance(average, expected, tolerance)
             ? AssertionResult.Passed
-            : MeasurementDiagnostics.Failed(value, string.Concat("it was ", Num(value.Average)));
+            : MeasurementDiagnostics.Failed(value, string.Concat("it was ", Num(average)));
     }
 
     /// <summary>Asserts every sample lies within the inclusive range [<paramref name="min"/>,
@@ -142,13 +150,17 @@ public static class MeasurementSetAssertions
     /// <param name="value">The measurement set.</param>
     /// <param name="min">The inclusive lower bound.</param>
     /// <param name="max">The inclusive upper bound.</param>
+    /// <remarks>A set with no samples fails: nothing was measured, so nothing can be said to be in range. A sample that is not a number is never in range.</remarks>
     /// <returns>A passing assertion when every sample is in range; otherwise a failing one.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="min"/> is greater than <paramref name="max"/>.</exception>
     [GenerateAssertion(ExpectationMessage = "to have all samples within [{min}, {max}]", InlineMethodBody = false)]
     public static AssertionResult HasAllSamplesInRange(this MeasurementSet value, double min, double max)
     {
         ArgumentNullException.ThrowIfNull(value);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(min, max);
+        if (value.IsEmpty)
+            return MeasurementDiagnostics.Failed(value, "it had no samples, so none can be within the range");
         return value.AllValuesInRange(min, max)
             ? AssertionResult.Passed
             : MeasurementDiagnostics.Failed(value, string.Concat("the samples were [", Fmt(value.Values), "]"));

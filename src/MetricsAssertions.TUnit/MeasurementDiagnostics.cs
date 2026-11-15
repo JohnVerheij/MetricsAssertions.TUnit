@@ -23,6 +23,32 @@ internal static class MeasurementDiagnostics
     public static AssertionResult Failed(MeasurementSet captured, string expectation)
         => AssertionResult.Failed(string.Concat(expectation, "\n  captured:\n", captured.Describe()));
 
+    /// <summary>Writes a backslash as <c>\\</c>, then a carriage return and a line feed as the two characters <c>\r</c> and
+    /// <c>\n</c>, so a caller-supplied instrument name cannot split a one-line clause of a failure message, a real line
+    /// break never reads like a backslash followed by <c>n</c>, and the name reads as it does in the captured listing
+    /// under the failure (<see cref="MeasurementSet.Describe"/> escapes the same way).</summary>
+    /// <param name="text">The caller-supplied text.</param>
+    /// <returns>The text on one line.</returns>
+    public static string EscapeLineBreaks(string text)
+        => text.Replace("\\", "\\\\", StringComparison.Ordinal)
+            .Replace("\r", "\\r", StringComparison.Ordinal)
+            .Replace("\n", "\\n", StringComparison.Ordinal);
+
+    /// <summary>Returns whether <paramref name="actual"/> equals <paramref name="expected"/> within
+    /// <paramref name="tolerance"/>. A value that is not a number never matches, and equal infinities match.</summary>
+    /// <param name="actual">The measured value.</param>
+    /// <param name="expected">The expected value.</param>
+    /// <param name="tolerance">The allowed absolute difference, already validated as finite and non-negative.</param>
+    /// <returns><see langword="true"/> when the values are within the tolerance.</returns>
+    public static bool WithinTolerance(double actual, double expected, double tolerance)
+    {
+        if (double.IsFinite(actual))
+            return Math.Abs(actual - expected) <= tolerance;
+        if (double.IsPositiveInfinity(actual))
+            return double.IsPositiveInfinity(expected);
+        return double.IsNegativeInfinity(actual) && double.IsNegativeInfinity(expected);
+    }
+
     /// <summary>
     /// Returns a failing result when the values of <paramref name="captured"/> sum to something no <see cref="long"/> can hold
     /// (not a number, infinite, or beyond the range of a long), because <see cref="MeasurementSet.Total"/> throws

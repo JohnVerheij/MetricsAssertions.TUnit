@@ -54,6 +54,7 @@ public sealed class InstrumentCapture : IDisposable
     /// <typeparam name="T">The instrument's value type.</typeparam>
     /// <param name="instrument">The instrument to capture.</param>
     /// <param name="timeProvider">An optional clock for measurement timestamps; <see cref="WaitForAsync"/> does not use it.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="instrument"/> is <see langword="null"/>.</exception>
     public static InstrumentCapture Of<T>(Instrument<T> instrument, TimeProvider? timeProvider = null) where T : struct
     {
         ArgumentNullException.ThrowIfNull(instrument);
@@ -64,6 +65,7 @@ public sealed class InstrumentCapture : IDisposable
     /// <typeparam name="T">The instrument's value type.</typeparam>
     /// <param name="instrument">The observable instrument to capture.</param>
     /// <param name="timeProvider">An optional clock for measurement timestamps; <see cref="WaitForAsync"/> does not use it.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="instrument"/> is <see langword="null"/>.</exception>
     public static InstrumentCapture OfObservable<T>(ObservableInstrument<T> instrument, TimeProvider? timeProvider = null) where T : struct
     {
         ArgumentNullException.ThrowIfNull(instrument);
@@ -116,6 +118,7 @@ public sealed class InstrumentCapture : IDisposable
     /// <param name="meter">The meter instance whose instrument to capture.</param>
     /// <param name="instrumentName">The instrument name.</param>
     /// <param name="timeProvider">An optional clock for measurement timestamps; <see cref="WaitForAsync"/> does not use it.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="meter"/> or <paramref name="instrumentName"/> is <see langword="null"/>.</exception>
     public static InstrumentCapture OfName<T>(Meter meter, string instrumentName, TimeProvider? timeProvider = null) where T : struct
     {
         ArgumentNullException.ThrowIfNull(meter);
