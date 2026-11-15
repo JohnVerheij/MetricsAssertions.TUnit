@@ -219,6 +219,21 @@ internal sealed class MeasurementSetTests
     }
 
     [Test]
+    public async Task ToSnapshotString_WritesABackslashAsTwo_SoItStaysDistinctFromALineBreak(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var set = new MeasurementSet(new[]
+        {
+            M("a" + (char)10 + "b", 1, ("k", "x" + (char)13 + "y")),
+            M(@"a\nb", 2, ("k", @"x\ry")),
+        });
+
+        // A real line break is written as \n or \r and a backslash as \\, so the two measurements render differently.
+        await Assert.That(set.ToSnapshotString()).IsEqualTo(@"a\nb 1 {k=x\ry}" + (char)10 + @"a\\nb 2 {k=x\\ry}" + (char)10);
+        await Assert.That(set.Describe()).Contains(@"a\\nb = 2 {k=x\\ry}");
+    }
+
+    [Test]
     public async Task Tagged_NullKey_ThrowsAlsoOnAnEmptySet(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();

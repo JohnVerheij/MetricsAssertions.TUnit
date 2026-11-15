@@ -271,10 +271,13 @@ public sealed class MeasurementSet
             .OrderBy(static t => t.Key, StringComparer.Ordinal)
             .Select(static t => $"{EscapeLineBreaks(t.Key)}={EscapeLineBreaks(Convert.ToString(t.Value, CultureInfo.InvariantCulture)!)}"));
 
-    /// <summary>Writes a carriage return and a line feed as the two characters <c>\r</c> and <c>\n</c>, so a captured instrument
-    /// name, tag key or tag value that holds a line break cannot split the one line a measurement is rendered on.</summary>
+    /// <summary>Writes a backslash as <c>\\</c>, then a carriage return and a line feed as the two characters <c>\r</c> and
+    /// <c>\n</c>, so a captured instrument name, tag key or tag value that holds a line break cannot split the one line a
+    /// measurement is rendered on, and a real line break never reads like a backslash followed by <c>n</c>.</summary>
     /// <param name="text">The captured text (never <see langword="null"/>: <see cref="Convert.ToString(object?, IFormatProvider?)"/> turns a null tag value into an empty string).</param>
     /// <returns>The text on one line.</returns>
     private static string EscapeLineBreaks(string text)
-        => text.Replace("\r", "\\r", StringComparison.Ordinal).Replace("\n", "\\n", StringComparison.Ordinal);
+        => text.Replace("\\", "\\\\", StringComparison.Ordinal)
+            .Replace("\r", "\\r", StringComparison.Ordinal)
+            .Replace("\n", "\\n", StringComparison.Ordinal);
 }
