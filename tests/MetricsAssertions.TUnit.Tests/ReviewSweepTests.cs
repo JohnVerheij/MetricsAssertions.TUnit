@@ -197,6 +197,27 @@ internal sealed class ReviewSweepTests
         await Assert.That(negative).Contains("    a\\r\\nb = -1 @ ");
     }
 
+    /// <summary>A backslash in an instrument name is written as two, as in the captured listing, so a name with a
+    /// real line break and one with a backslash followed by <c>n</c> read differently in the header.</summary>
+    [Test]
+    public async Task MeterCapture_NotBundledAndNegativeDelta_TellABackslashFromALineBreak(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter("MetricsAssertions.TUnit.Tests.Sweep.Backslash");
+        var counter = meter.CreateUpDownCounter<long>(@"a\nb");
+        using var capture = MeterCapture.For(meter).Add<long>(@"a\nb");
+        counter.Add(-1);
+
+        var lineBreak = await MessageAsync(async () => await Assert.That(capture).HasMeasurementCount("x\ny", 1));
+        var backslash = await MessageAsync(async () => await Assert.That(capture).HasMeasurementCount(@"x\ny", 1));
+        var negative = await MessageAsync(async () => await Assert.That(capture).HasCounterTotal(@"a\nb", 0));
+
+        await Assert.That(lineBreak).Contains(@"but no instrument named x\ny is bundled");
+        await Assert.That(backslash).Contains(@"but no instrument named x\\ny is bundled");
+        await Assert.That(negative).Contains(@"but a\\nb recorded a negative delta");
+        await Assert.That(negative).Contains(@"    a\\nb = -1 @ ");
+    }
+
     [Test]
     public async Task HasAllSamplesInRange_FailsOnAnEmptySet(CancellationToken ct)
     {

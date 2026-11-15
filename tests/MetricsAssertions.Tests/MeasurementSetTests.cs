@@ -270,4 +270,28 @@ internal sealed class MeasurementSetTests
         await Assert.That(negative.SamplesEqual([double.NegativeInfinity], 1e-9)).IsTrue();
         await Assert.That(negative.SamplesEqual([double.PositiveInfinity], 1e-9)).IsFalse();
     }
+
+    /// <summary>A tag value whose <see cref="object.ToString"/> returns <see langword="null"/> reads as an empty value: the
+    /// snapshot and the listing render it without throwing, and narrowing compares it as empty, like a null value.</summary>
+    [Test]
+    public async Task TagValueWhoseToStringIsNull_ReadsAsEmpty(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var set = new MeasurementSet(new[] { M("h", 1, ("k", new NullText(null))) });
+
+        await Assert.That(set.ToSnapshotString()).IsEqualTo("h 1 {k=}" + (char)10);
+        await Assert.That(set.Describe()).Contains("h = 1 {k=}");
+        await Assert.That(set.Tagged("k", null).Count).IsEqualTo(1);
+        await Assert.That(set.Tagged("k", string.Empty).Count).IsEqualTo(1);
+        await Assert.That(set.Tagged("k", "x").Count).IsEqualTo(0);
+    }
+
+    /// <summary>A tag value whose text is the given one, also <see langword="null"/>, as an override of
+    /// <see cref="object.ToString"/> in other code may return.</summary>
+    /// <param name="text">The text <see cref="ToString"/> returns.</param>
+    private sealed class NullText(string? text)
+    {
+        /// <inheritdoc/>
+        public override string? ToString() => text;
+    }
 }

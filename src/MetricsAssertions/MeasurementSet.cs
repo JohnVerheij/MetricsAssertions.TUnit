@@ -261,20 +261,25 @@ public sealed class MeasurementSet
 
     private static bool TagEquals(CapturedMeasurement measurement, string key, object? value)
         => measurement.Tags.TryGetValue(key, out var actual)
-            && string.Equals(
-                Convert.ToString(actual, CultureInfo.InvariantCulture),
-                Convert.ToString(value, CultureInfo.InvariantCulture),
-                StringComparison.Ordinal);
+            && string.Equals(TagText(actual), TagText(value), StringComparison.Ordinal);
 
     private static string FormatTags(CapturedMeasurement measurement)
         => string.Join(',', measurement.Tags
             .OrderBy(static t => t.Key, StringComparer.Ordinal)
-            .Select(static t => $"{EscapeLineBreaks(t.Key)}={EscapeLineBreaks(Convert.ToString(t.Value, CultureInfo.InvariantCulture)!)}"));
+            .Select(static t => $"{EscapeLineBreaks(t.Key)}={EscapeLineBreaks(TagText(t.Value))}"));
+
+    /// <summary>The text a tag value is compared and rendered by, in the invariant culture. A null value reads as an
+    /// empty string, and so does a value whose <see cref="object.ToString"/> returns <see langword="null"/>, which
+    /// <see cref="Convert.ToString(object?, IFormatProvider?)"/> passes through.</summary>
+    /// <param name="value">The tag value.</param>
+    /// <returns>The text, never <see langword="null"/>.</returns>
+    private static string TagText(object? value)
+        => Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
 
     /// <summary>Writes a backslash as <c>\\</c>, then a carriage return and a line feed as the two characters <c>\r</c> and
     /// <c>\n</c>, so a captured instrument name, tag key or tag value that holds a line break cannot split the one line a
     /// measurement is rendered on, and a real line break never reads like a backslash followed by <c>n</c>.</summary>
-    /// <param name="text">The captured text (never <see langword="null"/>: <see cref="Convert.ToString(object?, IFormatProvider?)"/> turns a null tag value into an empty string).</param>
+    /// <param name="text">The captured text (never <see langword="null"/>: a tag value arrives through <see cref="TagText"/>).</param>
     /// <returns>The text on one line.</returns>
     private static string EscapeLineBreaks(string text)
         => text.Replace("\\", "\\\\", StringComparison.Ordinal)

@@ -271,7 +271,7 @@ Tolerance comparisons never match a value that is not a number (a `NaN` sample, 
 
 A carriage return or line feed inside an instrument name, tag key or tag value is written as `\r` or `\n` in the failure dump, `MeasurementSet.Describe()` and `ToSnapshotString()`, so every measurement stays on one line.
 
-Tag values are compared as invariant text: for a tag whose value is the `bool` `true`, `Tagged("ok", true)` and `Tagged("ok", "True")` match and `Tagged("ok", "true")` does not, and a `null` tag value equals an empty string.
+Tag values are compared as invariant text: for a tag whose value is the `bool` `true`, `Tagged("ok", true)` and `Tagged("ok", "True")` match and `Tagged("ok", "true")` does not, and a `null` tag value equals an empty string, as does a value whose `ToString()` returns `null`.
 
 ### Assertions are kind-named, not kind-checked
 
