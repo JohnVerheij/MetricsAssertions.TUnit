@@ -56,6 +56,36 @@ internal sealed class InstrumentCaptureFlowTests
     }
 
     [Test]
+    public async Task NonEmptyFlowCapture_SaysHowManyMeasurementsOfOtherFlowsItIgnored(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter(MeterName + ".NonEmpty");
+        var counter = meter.CreateCounter<long>("hits");
+        using var capture = InstrumentCapture.Of(counter).InCurrentFlow();
+
+        counter.Add(1);
+        EmitFromASuppressedFlow(() => counter.Add(4));
+        EmitFromASuppressedFlow(() => counter.Add(5));
+
+        var described = capture.Measurements.Describe();
+        await Assert.That(described).StartsWith("    hits = 1 @ ");
+        await Assert.That(described).EndsWith("\n    (2 measurement(s) of the captured instruments were emitted by other flows and ignored, because this capture records only the flow that created it)");
+    }
+
+    [Test]
+    public async Task FlowCapture_WithoutOtherFlows_HasNoNote(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter(MeterName + ".NoOtherFlows");
+        var counter = meter.CreateCounter<long>("hits");
+        using var capture = InstrumentCapture.Of(counter).InCurrentFlow();
+
+        counter.Add(1);
+
+        await Assert.That(capture.Measurements.Describe()).DoesNotContain("other flows");
+    }
+
+    [Test]
     public async Task OfObservable_InCurrentFlow_RecordsAPullInTheFlow(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();

@@ -383,6 +383,26 @@ internal sealed class FlowScopedCaptureTests
     }
 
     [Test]
+    public async Task NonEmptyFlowScopedCapture_SaysHowManyMeasurementsOfOtherFlowsItIgnored(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter(MeterName + ".Ignored");
+        var counter = meter.CreateCounter<long>("hits");
+        using var capture = MeterCapture.For(meter).InCurrentFlow().Add<long>("hits");
+
+        counter.Add(1);
+        using (System.Threading.ExecutionContext.SuppressFlow())
+        {
+            var otherFlow = new System.Threading.Thread(() => counter.Add(4));
+            otherFlow.Start();
+            otherFlow.Join();
+        }
+
+        await Assert.That(capture.CounterTotal("hits")).IsEqualTo(1L);
+        await Assert.That(capture.Measurements.Describe()).EndsWith("\n    (1 measurement(s) of the captured instruments were emitted by other flows and ignored, because this capture records only the flow that created it)");
+    }
+
+    [Test]
     public async Task FlowScopedAdd_IgnoresASameNamedInstrumentOfAnotherValueType(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
