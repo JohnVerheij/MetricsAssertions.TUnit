@@ -251,7 +251,7 @@ public async Task CountsOnlyThisTestsOrder()
 }
 ```
 
-For one instrument, call `InCurrentFlow()` on the `InstrumentCapture` just created: it returns a flow-scoped capture of the same instrument and disposes the one it is called on, so keep the capture it returns.
+For one instrument, call `InCurrentFlow()` on the `InstrumentCapture` just created: it returns a flow-scoped capture of the same instrument and disposes the one it is called on, so keep the capture it returns. What the first capture recorded before the call is not carried over.
 
 ```csharp
 [Test]
@@ -265,7 +265,7 @@ public async Task CountsOnlyThisTestsOrder_OneInstrument()
 }
 ```
 
-`InCurrentFlow()` marks the async flow of the code that calls it, before the first `Add` (on an `InstrumentCapture`, before the first measurement). The capture then records a measurement when the code that emits it runs in that flow, or in a flow started from it afterwards: after an `await`, in `Task.Run`, `Parallel.ForEachAsync`, `ThreadPool.QueueUserWorkItem`, or a `Timer` started in the test. It attaches to every matching instrument in the process (not only the first), so a meter created per test is not missed. `RecordObservable()` called in the flow records the observable instruments in that flow.
+`InCurrentFlow()` marks the async flow of the code that calls it, before the first `Add` (on an `InstrumentCapture`, right after creating it). The capture then records a measurement when the code that emits it runs in that flow, or in a flow started from it afterwards: after an `await`, in `Task.Run`, `Parallel.ForEachAsync`, `ThreadPool.QueueUserWorkItem`, or a `Timer` started in the test. It attaches to every matching instrument in the process (not only the first), so a meter created per test is not missed. `RecordObservable()` called in the flow records the observable instruments in that flow.
 
 What it does not record, and what to do about it:
 

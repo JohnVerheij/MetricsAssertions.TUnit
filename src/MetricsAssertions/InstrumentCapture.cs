@@ -141,7 +141,8 @@ public sealed class InstrumentCapture : IDisposable
     /// code that calls this method: that flow, and the flows it starts afterwards (<see langword="await"/>
     /// continuations, <c>Task.Run</c>, <c>Parallel.ForEachAsync</c>, <c>ThreadPool.QueueUserWorkItem</c>, timers). A
     /// measurement of a test running in parallel is not recorded, even from the same static meter. This capture is
-    /// disposed, so call it on the capture just created and keep the one it returns:
+    /// disposed, and what it recorded before the call is not carried over (it is not scoped to the flow), so call it on
+    /// the capture just created and keep the one it returns:
     /// <c>using var capture = InstrumentCapture.OfName&lt;long&gt;(meter, "orders").InCurrentFlow();</c>. The returned
     /// capture attaches to every matching instrument in the process, not the first one only, so a meter created per test
     /// is not missed.
@@ -155,15 +156,12 @@ public sealed class InstrumentCapture : IDisposable
     /// </summary>
     /// <returns>A flow-scoped capture of the same instrument; this capture is disposed.</returns>
     /// <exception cref="ObjectDisposedException">The capture is disposed.</exception>
-    /// <exception cref="InvalidOperationException">The capture is already flow-scoped, or it already recorded a
-    /// measurement, which would not be scoped to the flow.</exception>
+    /// <exception cref="InvalidOperationException">The capture is already flow-scoped.</exception>
     public InstrumentCapture InCurrentFlow()
     {
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed), this);
         if (_inFlow is null)
             throw new InvalidOperationException("The capture is already scoped to the current flow.");
-        if (_rawSnapshot().Count > 0)
-            throw new InvalidOperationException("InCurrentFlow must be called right after the capture is created: this capture already recorded measurements, which are not scoped to the flow.");
         var scoped = _inFlow(FlowContext.Enter());
         Dispose();
         return scoped;

@@ -19,7 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`InstrumentCapture.InCurrentFlow()`** returns a capture of the same instrument that records only the measurements emitted in the async flow of the code that calls it, as `MeterCapture.InCurrentFlow()` does for a bundle, so a single-instrument capture of a static meter is isolated from tests running in parallel: `InstrumentCapture.OfName<long>(meter, "orders").InCurrentFlow()`. It works for every way an `InstrumentCapture` is created (`Of`, `OfObservable`, and the three `OfName` overloads) and attaches to every matching instrument, not the first one only. The capture it is called on is disposed; it throws `InvalidOperationException` when that capture is already flow-scoped or already recorded a measurement.
+- **`InstrumentCapture.InCurrentFlow()`** returns a capture of the same instrument that records only the measurements emitted in the async flow of the code that calls it, as `MeterCapture.InCurrentFlow()` does for a bundle, so a single-instrument capture of a static meter is isolated from tests running in parallel: `InstrumentCapture.OfName<long>(meter, "orders").InCurrentFlow()`. It works for every way an `InstrumentCapture` is created (`Of`, `OfObservable`, and the three `OfName` overloads) and attaches to every matching instrument, not the first one only. The capture it is called on is disposed, and what it recorded before the call is not carried over, so a test emitting in parallel while the capture is set up cannot make the call fail; it throws `InvalidOperationException` on a capture that is already flow-scoped.
+
+### Fixed
+
+- **`MeterCapture.InCurrentFlow().Add<T>(name)`** also enabled a same-named instrument of another value type on the captured meter (an observable `double` gauge next to a `long` counter), so every `RecordObservable()` ran that instrument's callback, and an exception there failed the pull. A flow-scoped capture now attaches only to instruments of `T`, as the capture without a flow scope does.
 
 ## [0.5.0] - 2026-11-15: flow-scoped capture, .NET 11, NaN and tolerance fixes
 

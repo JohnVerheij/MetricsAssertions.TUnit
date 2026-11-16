@@ -134,19 +134,47 @@ internal sealed class InstrumentCaptureFlowTests
     }
 
     [Test]
-    public async Task InCurrentFlow_RejectsAScopedCapture_AndACaptureWithMeasurements(CancellationToken ct)
+    public async Task InCurrentFlow_RejectsAScopedCapture(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         using var meter = new Meter(MeterName + ".Rejects");
         var counter = meter.CreateCounter<long>("hits");
         using var scoped = InstrumentCapture.Of(counter).InCurrentFlow();
-        using var plain = InstrumentCapture.Of(counter);
-        counter.Add(1);
 
         await Assert.That(() => scoped.InCurrentFlow()).Throws<InvalidOperationException>()
             .WithMessageContaining("already scoped to the current flow", StringComparison.Ordinal);
-        await Assert.That(() => plain.InCurrentFlow()).Throws<InvalidOperationException>()
-            .WithMessageContaining("already recorded measurements", StringComparison.Ordinal);
+    }
+
+    [Test]
+    public async Task EmissionsBeforeInCurrentFlow_DoNotFailIt_AndAreNotCarriedOver(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter(MeterName + ".BeforeScope");
+        var counter = meter.CreateCounter<long>("hits");
+        var plain = InstrumentCapture.Of(counter);
+
+        // Between creating the capture and scoping it, a parallel test emits, and so does this flow.
+        EmitFromASuppressedFlow(() => counter.Add(100));
+        counter.Add(10);
+        using var scoped = plain.InCurrentFlow();
+        counter.Add(1);
+
+        await Assert.That(scoped.Total).IsEqualTo(1L);
+    }
+
+    [Test]
+    public async Task OfName_InCurrentFlow_IgnoresASameNamedInstrumentOfAnotherValueType(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter(MeterName + ".ValueType");
+        var counter = meter.CreateCounter<long>("hits");
+        meter.CreateObservableGauge("hits", static double () => throw new InvalidOperationException("a double instrument must not be observed"));
+        using var capture = InstrumentCapture.OfName<long>(meter, "hits").InCurrentFlow();
+
+        counter.Add(3);
+        capture.RecordObservable();
+
+        await Assert.That(capture.Total).IsEqualTo(3L);
     }
 
     [Test]
