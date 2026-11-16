@@ -20,6 +20,7 @@ namespace MetricsAssertions
         public long Total { get; }
         public void Dispose() { }
         public bool HasMeasurementTagged(string key, object? value) { }
+        public MetricsAssertions.InstrumentCapture InCurrentFlow() { }
         public void RecordObservable() { }
         public MetricsAssertions.MeasurementSet Since(MetricsAssertions.MeasurementBaseline baseline) { }
         public MetricsAssertions.MeasurementBaseline Snapshot() { }

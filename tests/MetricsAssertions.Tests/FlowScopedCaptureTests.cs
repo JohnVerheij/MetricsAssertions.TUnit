@@ -383,6 +383,21 @@ internal sealed class FlowScopedCaptureTests
     }
 
     [Test]
+    public async Task FlowScopedAdd_IgnoresASameNamedInstrumentOfAnotherValueType(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter(MeterName + ".ValueType");
+        var counter = meter.CreateCounter<long>("hits");
+        meter.CreateObservableGauge("hits", static double () => throw new InvalidOperationException("a double instrument must not be observed"));
+        using var capture = MeterCapture.For(meter).InCurrentFlow().Add<long>("hits");
+
+        counter.Add(3);
+        capture.RecordObservable();
+
+        await Assert.That(capture.CounterTotal("hits")).IsEqualTo(3L);
+    }
+
+    [Test]
     public async Task ReplacingAnInstrument_KeepsTheFlowScope(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();

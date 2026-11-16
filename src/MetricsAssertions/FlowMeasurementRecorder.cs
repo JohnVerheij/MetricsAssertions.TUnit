@@ -29,7 +29,7 @@ internal sealed class FlowMeasurementRecorder<T> : IDisposable where T : struct
     /// <summary>Starts recording the flow identified by <paramref name="token"/>.</summary>
     /// <param name="token">The token of the flow to record, from <see cref="FlowContext.Enter"/>.</param>
     /// <param name="instrumentName">The instrument name each captured measurement carries.</param>
-    /// <param name="matches">Decides which published instruments are captured.</param>
+    /// <param name="matches">Decides which published instruments of value type <typeparamref name="T"/> are captured.</param>
     /// <param name="timeProvider">The clock for the measurement timestamps, or <see langword="null"/> for the system clock.</param>
     internal FlowMeasurementRecorder(object token, string instrumentName, Func<Instrument, bool> matches, TimeProvider? timeProvider)
     {
@@ -38,7 +38,9 @@ internal sealed class FlowMeasurementRecorder<T> : IDisposable where T : struct
         _timeProvider = timeProvider ?? TimeProvider.System;
         _listener.InstrumentPublished = (instrument, listener) =>
         {
-            if (matches(instrument))
+            // Only instruments of T: a same-named instrument of another value type is not captured, and its
+            // observable callback does not run on RecordObservable.
+            if (instrument is (Instrument<T> or ObservableInstrument<T>) && matches(instrument))
                 listener.EnableMeasurementEvents(instrument);
         };
         _listener.SetMeasurementEventCallback<T>(OnMeasurement);

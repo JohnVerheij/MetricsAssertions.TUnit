@@ -3,16 +3,30 @@
 <Suppressions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:MetricsAssertions.MeterCapture.InCurrentFlow</Target>
+    <Target>M:MetricsAssertions.InstrumentCapture.InCurrentFlow</Target>
+    <Left>lib/net10.0/MetricsAssertions.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.InstrumentCapture.InCurrentFlow</Target>
+    <Left>lib/net11.0/MetricsAssertions.dll</Left>
+    <Right>lib/net11.0/MetricsAssertions.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0003</DiagnosticId>
+    <Target>MetricsAssertions, Version=0.5.0.0, Culture=neutral, PublicKeyToken=null</Target>
     <Left>lib/net10.0/MetricsAssertions.dll</Left>
     <Right>lib/net10.0/MetricsAssertions.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0003</DiagnosticId>
-    <Target>MetricsAssertions, Version=0.4.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>lib/net10.0/MetricsAssertions.dll</Left>
-    <Right>lib/net10.0/MetricsAssertions.dll</Right>
+    <Target>MetricsAssertions, Version=0.5.0.0, Culture=neutral, PublicKeyToken=null</Target>
+    <Left>lib/net11.0/MetricsAssertions.dll</Left>
+    <Right>lib/net11.0/MetricsAssertions.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
 </Suppressions>

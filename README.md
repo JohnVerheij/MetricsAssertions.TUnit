@@ -185,6 +185,7 @@ The `MetricsAssertions` core exposes the capture and query surface for reading m
 | `MeterCapture.CounterTotal(name)` / `Samples(name)` / `MeasurementCount(name)` / `HasMeasurementTagged(name, key, value)` | Per-instrument reads without an assertion. |
 | `MeterCapture.Measurements` / `RecordObservable()` | Every measurement across the bundle as one `MeasurementSet`; pull the values of the bundled observable instruments. |
 | `MeterCapture.InCurrentFlow()` | Record only the measurements emitted in the async flow of the test that calls it, even from a static meter. See [Capture lifetime and isolation](#capture-lifetime-and-isolation). |
+| `InstrumentCapture.InCurrentFlow()` *(v0.6.0+)* | The same for one instrument: returns a flow-scoped capture of the instrument and disposes the one it is called on. |
 | `MeterCapture.For(name, clock)` / `For(name, meterScope, clock)` *(v0.4.0+)* | Set the clock once for every bundled instrument; `Add` takes no clock. |
 | `MeterCapture.For(meter)` / `InstrumentCapture.OfName<T>(meter, name)` *(v0.4.0+)* | Capture one `Meter` instance only, so a same-named meter of a test running in parallel is not captured. |
 | `MeterInspector` | Discover a meter's published instruments (`PublishedInstrumentNames` / `IsPublished` / `PublishesAll`). |
@@ -229,7 +230,7 @@ Capture is built on the first-party `MetricCollector<T>` from `Microsoft.Extensi
 
 - **Capture by meter name is process-wide.** Each captured instrument attaches to the first instrument in the process with that meter name, scope and instrument name (`MetricCollector<T>` stops looking after that), and records every measurement that instrument receives, whichever test or thread emits it. With a static meter, that is the instrument every test emits to, so every capture sees the measurements of every test; with a meter created per test, a capture can attach to another test's instrument and miss its own test's measurements.
 - **A keyed `[NotInParallel("meter:...")]` is not enough.** It serializes only the tests that carry the same key. Any other test class that emits to the same meter keeps running in parallel and lands in the capture. Serialize every test that emits to the meter with an un-keyed `[NotInParallel]` (which serializes the whole suite), or use one of the remedies below.
-- **Scope the capture to the test's async flow (static meter):** `MeterCapture.For(name).InCurrentFlow()` records only the measurements emitted by the code that runs in the flow of the test, and drops the rest (see [the flow rules](#flow-scoped-capture)).
+- **Scope the capture to the test's async flow (static meter):** `MeterCapture.For(name).InCurrentFlow()`, or for one instrument `InstrumentCapture.OfName<T>(meterName, name).InCurrentFlow()`, records only the measurements emitted by the code that runs in the flow of the test, and drops the rest (see [the flow rules](#flow-scoped-capture)).
 - **Isolate by instance:** when the test creates or receives the `Meter`, capture it with `MeterCapture.For(meter)` or `InstrumentCapture.OfName<T>(meter, name)`. A meter with the same name elsewhere is not captured.
 - **Isolate by scope:** create the meter through a per-test `IMeterFactory` (for example from the test host's DI container) and pass the factory as the scope: `MeterCapture.For(name, factory)`.
 - **Isolate by tag:** emit a value that is unique per test (an id, a tenant) and narrow with `Tagged(key, value)`. That needs the code under test to put such a tag on the measurement.
@@ -250,7 +251,21 @@ public async Task CountsOnlyThisTestsOrder()
 }
 ```
 
-`InCurrentFlow()` marks the async flow of the code that calls it, before the first `Add`. The capture then records a measurement when the code that emits it runs in that flow, or in a flow started from it afterwards: after an `await`, in `Task.Run`, `Parallel.ForEachAsync`, `ThreadPool.QueueUserWorkItem`, or a `Timer` started in the test. It attaches to every matching instrument in the process (not only the first), so a meter created per test is not missed. `RecordObservable()` called in the flow records the observable instruments in that flow.
+For one instrument, call `InCurrentFlow()` on the `InstrumentCapture` just created: it returns a flow-scoped capture of the same instrument and disposes the one it is called on, so keep the capture it returns. What the first capture recorded before the call is not carried over.
+
+```csharp
+[Test]
+public async Task CountsOnlyThisTestsOrder_OneInstrument()
+{
+    using var capture = InstrumentCapture.OfName<long>("MyCompany.Orders", "orders.placed").InCurrentFlow();
+
+    await orders.PlaceAsync("A-1");
+
+    await Assert.That(capture).HasCounterTotal(1);
+}
+```
+
+`InCurrentFlow()` marks the async flow of the code that calls it, before the first `Add` (on an `InstrumentCapture`, right after creating it). The capture then records a measurement when the code that emits it runs in that flow, or in a flow started from it afterwards: after an `await`, in `Task.Run`, `Parallel.ForEachAsync`, `ThreadPool.QueueUserWorkItem`, or a `Timer` started in the test. It attaches to every matching instrument in the process (not only the first), so a meter created per test is not missed. `RecordObservable()` called in the flow records the observable instruments in that flow.
 
 What it does not record, and what to do about it:
 
