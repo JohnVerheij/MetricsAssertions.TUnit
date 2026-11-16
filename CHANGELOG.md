@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`InstrumentCapture.InCurrentFlow()`** returns a capture of the same instrument that records only the measurements emitted in the async flow of the code that calls it, as `MeterCapture.InCurrentFlow()` does for a bundle, so a single-instrument capture of a static meter is isolated from tests running in parallel: `InstrumentCapture.OfName<long>(meter, "orders").InCurrentFlow()`. It works for every way an `InstrumentCapture` is created (`Of`, `OfObservable`, and the three `OfName` overloads) and attaches to every matching instrument, not the first one only. The capture it is called on is disposed; it throws `InvalidOperationException` when that capture is already flow-scoped or already recorded a measurement.
+
 ## [0.5.0] - 2026-11-15: flow-scoped capture, .NET 11, NaN and tolerance fixes
 
 ### Added

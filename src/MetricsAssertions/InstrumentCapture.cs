@@ -28,6 +28,7 @@ public sealed class InstrumentCapture : IDisposable
     private readonly Action _recordObservable;
     private readonly Func<int, CancellationToken, Task> _wait;
     private readonly Func<int> _ignoredFromOtherFlows;
+    private readonly Func<object, InstrumentCapture>? _inFlow;
     private readonly object _token = new();
     private bool _disposed;
 
@@ -40,7 +41,8 @@ public sealed class InstrumentCapture : IDisposable
         Func<IReadOnlyList<CapturedMeasurement>> rawSnapshot,
         Action recordObservable,
         Func<int, CancellationToken, Task> wait,
-        Func<int> ignoredFromOtherFlows)
+        Func<int> ignoredFromOtherFlows,
+        Func<object, InstrumentCapture>? inFlow)
     {
         InstrumentName = instrumentName;
         _collector = collector;
@@ -48,6 +50,7 @@ public sealed class InstrumentCapture : IDisposable
         _recordObservable = recordObservable;
         _wait = wait;
         _ignoredFromOtherFlows = ignoredFromOtherFlows;
+        _inFlow = inFlow;
     }
 
     /// <summary>Captures the supplied (referenceable) instrument.</summary>
@@ -58,7 +61,8 @@ public sealed class InstrumentCapture : IDisposable
     public static InstrumentCapture Of<T>(Instrument<T> instrument, TimeProvider? timeProvider = null) where T : struct
     {
         ArgumentNullException.ThrowIfNull(instrument);
-        return Wrap(instrument.Name, new MetricCollector<T>(instrument, timeProvider));
+        return Wrap(instrument.Name, new MetricCollector<T>(instrument, timeProvider),
+            token => InFlow<T>(token, instrument.Name, i => ReferenceEquals(i, instrument), timeProvider));
     }
 
     /// <summary>Captures the supplied (referenceable) observable instrument.</summary>
@@ -69,7 +73,8 @@ public sealed class InstrumentCapture : IDisposable
     public static InstrumentCapture OfObservable<T>(ObservableInstrument<T> instrument, TimeProvider? timeProvider = null) where T : struct
     {
         ArgumentNullException.ThrowIfNull(instrument);
-        return Wrap(instrument.Name, new MetricCollector<T>(instrument, timeProvider));
+        return Wrap(instrument.Name, new MetricCollector<T>(instrument, timeProvider),
+            token => InFlow<T>(token, instrument.Name, i => ReferenceEquals(i, instrument), timeProvider));
     }
 
     /// <summary>
@@ -106,7 +111,10 @@ public sealed class InstrumentCapture : IDisposable
     public static InstrumentCapture OfName<T>(object? meterScope, string meterName, string instrumentName, TimeProvider? timeProvider = null) where T : struct
     {
         MeterScopeGuard.ThrowIfNotAScope(meterScope, nameof(meterScope));
-        return Wrap(instrumentName, new MetricCollector<T>(meterScope, meterName, instrumentName, timeProvider));
+        return Wrap(instrumentName, new MetricCollector<T>(meterScope, meterName, instrumentName, timeProvider),
+            token => InFlow<T>(token, instrumentName, i => string.Equals(i.Name, instrumentName, StringComparison.Ordinal)
+                && string.Equals(i.Meter.Name, meterName, StringComparison.Ordinal) && Equals(i.Meter.Scope, meterScope),
+                timeProvider));
     }
 
     /// <summary>
@@ -123,10 +131,45 @@ public sealed class InstrumentCapture : IDisposable
     {
         ArgumentNullException.ThrowIfNull(meter);
         ArgumentNullException.ThrowIfNull(instrumentName);
-        return Wrap(instrumentName, new MetricCollector<T>(meter, instrumentName, timeProvider));
+        return Wrap(instrumentName, new MetricCollector<T>(meter, instrumentName, timeProvider),
+            token => InFlow<T>(token, instrumentName, i => string.Equals(i.Name, instrumentName, StringComparison.Ordinal)
+                && ReferenceEquals(i.Meter, meter), timeProvider));
     }
 
-    private static InstrumentCapture Wrap<T>(string name, MetricCollector<T> collector) where T : struct
+    /// <summary>
+    /// Returns a capture of the same instrument that records only the measurements emitted in the async flow of the
+    /// code that calls this method: that flow, and the flows it starts afterwards (<see langword="await"/>
+    /// continuations, <c>Task.Run</c>, <c>Parallel.ForEachAsync</c>, <c>ThreadPool.QueueUserWorkItem</c>, timers). A
+    /// measurement of a test running in parallel is not recorded, even from the same static meter. This capture is
+    /// disposed, so call it on the capture just created and keep the one it returns:
+    /// <c>using var capture = InstrumentCapture.OfName&lt;long&gt;(meter, "orders").InCurrentFlow();</c>. The returned
+    /// capture attaches to every matching instrument in the process, not the first one only, so a meter created per test
+    /// is not missed.
+    /// <para>
+    /// The flow rule has the limits described at <see cref="MeterCapture.InCurrentFlow"/>: a capture created inside an
+    /// awaited async method does not reach the caller, and measurements emitted by a thread started with
+    /// <c>ExecutionContext.SuppressFlow()</c>, or by a service or thread that was already running before this call, are
+    /// not recorded. If the returned capture is empty while other flows emitted to the instrument,
+    /// <see cref="MeasurementSet.Describe"/> (and so every failure message) says so.
+    /// </para>
+    /// </summary>
+    /// <returns>A flow-scoped capture of the same instrument; this capture is disposed.</returns>
+    /// <exception cref="ObjectDisposedException">The capture is disposed.</exception>
+    /// <exception cref="InvalidOperationException">The capture is already flow-scoped, or it already recorded a
+    /// measurement, which would not be scoped to the flow.</exception>
+    public InstrumentCapture InCurrentFlow()
+    {
+        ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed), this);
+        if (_inFlow is null)
+            throw new InvalidOperationException("The capture is already scoped to the current flow.");
+        if (_rawSnapshot().Count > 0)
+            throw new InvalidOperationException("InCurrentFlow must be called right after the capture is created: this capture already recorded measurements, which are not scoped to the flow.");
+        var scoped = _inFlow(FlowContext.Enter());
+        Dispose();
+        return scoped;
+    }
+
+    private static InstrumentCapture Wrap<T>(string name, MetricCollector<T> collector, Func<object, InstrumentCapture> inFlow) where T : struct
         => new(
             name,
             collector,
@@ -134,7 +177,8 @@ public sealed class InstrumentCapture : IDisposable
                 new CapturedMeasurement(name, Convert.ToDouble(m.Value, CultureInfo.InvariantCulture), m.Tags, m.Timestamp))],
             recordObservable: collector.RecordObservableInstruments,
             wait: collector.WaitForMeasurementsAsync,
-            ignoredFromOtherFlows: static () => 0);
+            ignoredFromOtherFlows: static () => 0,
+            inFlow: inFlow);
 
     /// <summary>
     /// Captures the named instrument of the matching meters, recording only the measurements emitted in the async flow
@@ -156,7 +200,8 @@ public sealed class InstrumentCapture : IDisposable
             rawSnapshot: recorder.Snapshot,
             recordObservable: recorder.RecordObservable,
             wait: recorder.WaitAsync,
-            ignoredFromOtherFlows: () => recorder.IgnoredFromOtherFlows);
+            ignoredFromOtherFlows: () => recorder.IgnoredFromOtherFlows,
+            inFlow: null);
     }
 
     /// <summary>Gets how many measurements of the captured instruments other flows emitted, which a flow-scoped capture ignores (0 otherwise).</summary>

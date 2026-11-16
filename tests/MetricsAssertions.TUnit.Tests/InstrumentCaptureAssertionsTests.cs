@@ -141,4 +141,26 @@ internal sealed class InstrumentCaptureAssertionsTests
         await Assert.That(caught.Message).Contains("requests = 3");
         await Assert.That(caught.Message).Contains("route=/orders");
     }
+
+    [Test]
+    public async Task FlowScopedCapture_AssertsOnlyItsFlow_AndSaysWhenOtherFlowsEmitted(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var meter = new Meter("MetricsAssertions.TUnit.Tests.IC.Flow");
+        var counter = meter.CreateCounter<long>("requests");
+        using var capture = InstrumentCapture.OfName<long>(meter, "requests").InCurrentFlow();
+
+        using (ExecutionContext.SuppressFlow())
+        {
+            var otherFlow = new Thread(() => counter.Add(10));
+            otherFlow.Start();
+            otherFlow.Join();
+        }
+
+        var caught = await Assert.That(async () => await Assert.That(capture).HasCounterTotal(10)).Throws<AssertionException>();
+        await Assert.That(caught!.Message).Contains("emitted by other flows and ignored");
+
+        counter.Add(2);
+        await Assert.That(capture).HasCounterTotal(2);
+    }
 }
