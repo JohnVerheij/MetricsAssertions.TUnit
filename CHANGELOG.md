@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-17: flow-scoped single-instrument capture
+
 ### Added
 
 - **`InstrumentCapture.InCurrentFlow()`** returns a capture of the same instrument that records only the measurements emitted in the async flow of the code that calls it, as `MeterCapture.InCurrentFlow()` does for a bundle, so a single-instrument capture of a static meter is isolated from tests running in parallel: `InstrumentCapture.OfName<long>(meter, "orders").InCurrentFlow()`. It works for every way an `InstrumentCapture` is created (`Of`, `OfObservable`, and the three `OfName` overloads) and attaches to every matching instrument, not the first one only. The capture it is called on is disposed; it throws `InvalidOperationException` when that capture is already flow-scoped or already recorded a measurement.
@@ -139,7 +141,8 @@ capture and a first assertion. The full surface lands in 0.1.0.
 - **`MetricsAssertions.TUnit` (adapter):** `Assert.That(capture).HasMeasurementCount(n)`, generated
   via TUnit's `[GenerateAssertion]` source generator.
 
-[unreleased]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.5.0...HEAD
+[unreleased]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.2.0...v0.3.0
