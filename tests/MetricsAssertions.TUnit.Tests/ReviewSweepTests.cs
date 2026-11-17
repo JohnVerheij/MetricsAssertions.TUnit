@@ -140,7 +140,7 @@ internal sealed class ReviewSweepTests
         var counter = meter.CreateCounter<long>("orders");
         using var capture = InstrumentCapture.Of(counter);
 
-        bool LastMatches(string message)
+        static bool LastMatches(string message)
         {
             var listed = ListedValues(message);
             return listed.Count is 0
