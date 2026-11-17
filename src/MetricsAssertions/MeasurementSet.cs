@@ -229,6 +229,7 @@ public sealed class MeasurementSet
     /// (sorted, for stable baselines), this preserves capture order and carries timestamps. A line break inside an
     /// instrument name, tag key or tag value is written as <c>\r</c> or <c>\n</c>, so a measurement never spans two lines.
     /// For a set built by a <see cref="MeterCapture"/>, the capture order is per instrument, in the order the instruments were added.
+    /// For a flow-scoped capture that ignored measurements of other flows, a last line says how many.
     /// </summary>
     public string Describe()
     {
@@ -236,10 +237,7 @@ public sealed class MeasurementSet
         {
             return IgnoredFromOtherFlows is 0
                 ? "    (no measurements captured)"
-                : string.Concat(
-                    "    (no measurements captured; ",
-                    IgnoredFromOtherFlows.ToString(CultureInfo.InvariantCulture),
-                    " measurement(s) of the captured instruments were emitted by other flows and ignored, because this capture records only the flow that created it)");
+                : string.Concat("    (no measurements captured; ", IgnoredNote());
         }
 
         var sb = new StringBuilder();
@@ -256,8 +254,17 @@ public sealed class MeasurementSet
             sb.Append(" @ ").Append(m.Timestamp.ToString("O", CultureInfo.InvariantCulture));
         }
 
+        if (IgnoredFromOtherFlows > 0)
+            sb.Append("\n    (").Append(IgnoredNote());
         return sb.ToString();
     }
+
+    /// <summary>The note on the measurements of other flows that a flow-scoped capture ignored, closing parenthesis included.</summary>
+    /// <returns>The count and the reason, for <see cref="Describe"/>.</returns>
+    private string IgnoredNote()
+        => string.Concat(
+            IgnoredFromOtherFlows.ToString(CultureInfo.InvariantCulture),
+            " measurement(s) of the captured instruments were emitted by other flows and ignored, because this capture records only the flow that created it)");
 
     private static bool TagEquals(CapturedMeasurement measurement, string key, object? value)
         => measurement.Tags.TryGetValue(key, out var actual)

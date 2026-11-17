@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-17: ignored measurements of other flows in every failure message
+
+### Changed
+
+- **`MeasurementSet.Describe()`, and so every failure message, of a flow-scoped capture** (`InstrumentCapture.InCurrentFlow()`, `MeterCapture.InCurrentFlow()`) says how many measurements of other flows the capture ignored whenever there were any, on a last line after the measurements. Before, it said so only for an empty capture, so a capture that held its own measurement and ignored one of another flow failed with `but it was 1` and nothing on the other flow. `ToSnapshotString()` is unchanged: the count depends on what runs in parallel and stays out of baselines.
+
 ## [0.6.0] - 2026-11-16: flow-scoped single-instrument capture
 
 ### Added
@@ -145,7 +151,8 @@ capture and a first assertion. The full surface lands in 0.1.0.
 - **`MetricsAssertions.TUnit` (adapter):** `Assert.That(capture).HasMeasurementCount(n)`, generated
   via TUnit's `[GenerateAssertion]` source generator.
 
-[unreleased]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.6.0...HEAD
+[unreleased]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.3.0...v0.4.0

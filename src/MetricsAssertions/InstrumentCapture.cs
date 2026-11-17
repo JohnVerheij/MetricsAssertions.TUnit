@@ -150,8 +150,8 @@ public sealed class InstrumentCapture : IDisposable
     /// The flow rule has the limits described at <see cref="MeterCapture.InCurrentFlow"/>: a capture created inside an
     /// awaited async method does not reach the caller, and measurements emitted by a thread started with
     /// <c>ExecutionContext.SuppressFlow()</c>, or by a service or thread that was already running before this call, are
-    /// not recorded. If the returned capture is empty while other flows emitted to the instrument,
-    /// <see cref="MeasurementSet.Describe"/> (and so every failure message) says so.
+    /// not recorded. If other flows emitted to the instrument, <see cref="MeasurementSet.Describe"/> (and so every
+    /// failure message) says how many measurements the returned capture ignored.
     /// </para>
     /// </summary>
     /// <returns>A flow-scoped capture of the same instrument; this capture is disposed.</returns>

@@ -177,8 +177,9 @@ public sealed class MeterCapture : IDisposable
     /// (the marker does not flow back up), so create it in the test method or in a synchronous helper; measurements
     /// emitted by a thread started with <c>ExecutionContext.SuppressFlow()</c>, or by a service or thread that was already
     /// running before this call, are not recorded. When such an emission is the one under test, use capture by
-    /// <see cref="For(Meter)"/> or a serialized test instead. If a flow-scoped capture is empty while other flows emitted
-    /// to the same instruments, <see cref="MeasurementSet.Describe"/> (and so every failure message) says so.
+    /// <see cref="For(Meter)"/> or a serialized test instead. If other flows emitted to the same instruments, a
+    /// flow-scoped capture's <see cref="MeasurementSet.Describe"/> (and so every failure message) says how many
+    /// measurements it ignored.
     /// </para>
     /// </summary>
     /// <returns>This capture.</returns>

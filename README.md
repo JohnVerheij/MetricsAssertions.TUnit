@@ -272,7 +272,7 @@ What it does not record, and what to do about it:
 - **A capture created inside an awaited async method does not reach the caller**, because the marker does not flow back up. Create it in the test method, or in a synchronous helper that the test method calls.
 - **A capture created in a constructor, a `[Before(Test)]` hook or a `[Before(Class)]` hook does not reach the test body** (measured on TUnit): it records nothing of the test. Create it in the test method.
 - **Emissions from code that was already running before the capture was created** (a background service, a thread, a hosted service started earlier), and emissions from a thread started with `ExecutionContext.SuppressFlow()`, are not recorded. When that emission is what the test checks, use capture by instance or by scope, or serialize.
-- A flow-scoped capture that is empty while other flows emitted to the same instruments says so in the failure message and in `MeasurementSet.Describe()`.
+- When other flows emitted to the same instruments, a flow-scoped capture says how many of their measurements it ignored, in the failure message and in `MeasurementSet.Describe()`: in place of the measurements when it holds none, on a last line after them otherwise.
 
 ### Values are projected to `double`
 

@@ -162,5 +162,10 @@ internal sealed class InstrumentCaptureAssertionsTests
 
         counter.Add(2);
         await Assert.That(capture).HasCounterTotal(2);
+
+        // Not empty any more: the failure still says that the other flow's measurement was ignored.
+        var mixed = await Assert.That(async () => await Assert.That(capture).HasCounterTotal(12)).Throws<AssertionException>();
+        await Assert.That(mixed!.Message).Contains("but it was 2");
+        await Assert.That(mixed.Message).Contains("1 measurement(s) of the captured instruments were emitted by other flows and ignored");
     }
 }
