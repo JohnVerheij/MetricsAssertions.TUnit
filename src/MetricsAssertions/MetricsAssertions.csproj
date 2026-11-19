@@ -11,10 +11,10 @@
     <IsPackable>true</IsPackable>
     <PackageId>MetricsAssertions</PackageId>
     <ProductName>MetricsAssertions</ProductName>
-    <Version>0.6.1</Version>
+    <Version>0.7.0</Version>
     <Authors>John Verheij</Authors>
     <Copyright>Copyright (c) 2026 John Verheij</Copyright>
-    <Description>Framework-agnostic core for fluent metric-measurement assertions over System.Diagnostics.Metrics instruments in .NET test projects, built on the first-party MetricCollector testing primitive. Captures the measurements an instrument records into a disposable, per-test InstrumentCapture and projects them to a uniform CapturedMeasurement shape, with meter-wide, observable, by-name and per-flow capture, and tag and delta queries. Test-framework assertion entry points live in adapter packages (MetricsAssertions.TUnit). AOT-compatible, trimmable, no runtime reflection.</Description>
+    <Description>Framework-agnostic core for fluent metric-measurement assertions over System.Diagnostics.Metrics instruments in .NET test projects, built on the first-party MetricCollector testing primitive. Captures the measurements an instrument records into a disposable, per-test InstrumentCapture and projects them to a uniform CapturedMeasurement shape, with meter-wide, observable, by-name and per-flow capture, and tag, delta and cardinality queries. Test-framework assertion entry points live in adapter packages (MetricsAssertions.TUnit). AOT-compatible, trimmable, no runtime reflection.</Description>
     <PackageTags>assertions;testing;metrics;diagnostics;instrumentation;metriccollector;dotnet;aot</PackageTags>
     <PackageProjectUrl>https://metricsassertions.dev</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -35,7 +35,7 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <!-- ApiCompat baseline: pins to the previous shipped version so binary breaks are caught at pack time. -->
-    <PackageValidationBaselineVersion>0.6.0</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>0.6.1</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
     <EnableStrictModeForCompatibleFrameworksInPackage>true</EnableStrictModeForCompatibleFrameworksInPackage>
     <EnableStrictModeForBaselineValidation>true</EnableStrictModeForBaselineValidation>

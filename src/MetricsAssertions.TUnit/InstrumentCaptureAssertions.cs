@@ -10,7 +10,8 @@ namespace MetricsAssertions.TUnit;
 /// <summary>
 /// TUnit-native fluent <c>Assert.That(capture).Has*</c> assertions over a single-instrument
 /// <see cref="InstrumentCapture"/>: counter and up-down-counter totals, measurement counts, last value,
-/// and tag presence. Generated via the TUnit <c>[GenerateAssertion]</c> source generator (AOT-clean).
+/// tag presence, and tag and series cardinality budgets. Generated via the TUnit <c>[GenerateAssertion]</c> source
+/// generator (AOT-clean).
 /// </summary>
 public static class InstrumentCaptureAssertions
 {
@@ -172,5 +173,42 @@ public static class InstrumentCaptureAssertions
         return set.Tagged(tagKey, tagValue).Count > 0
             ? AssertionResult.Passed
             : MeasurementDiagnostics.Failed(set, "none matched");
+    }
+
+    /// <summary>Asserts the tag <paramref name="tagKey"/> of the captured measurements has at most <paramref name="max"/>
+    /// distinct values, a budget on the tag's cardinality: a tag fed from an unbounded source (an id, a raw path) fails it.</summary>
+    /// <param name="value">The instrument capture.</param>
+    /// <param name="tagKey">The tag key whose distinct values are counted.</param>
+    /// <param name="max">The most distinct values allowed (at least 1).</param>
+    /// <remarks>Measurements without the tag do not count, and values compare as invariant text, as in <see cref="MeasurementSet.DistinctTagValues"/>. The assertion fails when no measurement carries the tag, so a misspelled key or a capture that recorded nothing does not pass. A failure lists the values, the first 20 of them.</remarks>
+    /// <returns>A passing assertion when the tag has at most <paramref name="max"/> distinct values; otherwise a failing one.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> or <paramref name="tagKey"/> is
+    /// <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="max"/> is less than 1.</exception>
+    [GenerateAssertion(ExpectationMessage = "to have at most {max} distinct value(s) of tag {tagKey}", InlineMethodBody = false)]
+    public static AssertionResult HasTagCardinalityAtMost(this InstrumentCapture value, string tagKey, int max)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(tagKey);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(max);
+        MeasurementSet set = value.Measurements;
+        return MeasurementDiagnostics.TagCardinalityAtMost(set, set, tagKey, max);
+    }
+
+    /// <summary>Asserts the captured measurements form at most <paramref name="max"/> series, a budget on the instrument's
+    /// series cardinality. A series is a distinct tag set (see <see cref="MeasurementSet.DistinctSeries"/>).</summary>
+    /// <param name="value">The instrument capture.</param>
+    /// <param name="max">The most series allowed (at least 1).</param>
+    /// <remarks>The assertion fails when the capture recorded nothing, so an instrument that emitted nothing does not pass. A failure lists the series, the first 20 of them.</remarks>
+    /// <returns>A passing assertion when the measurements form at most <paramref name="max"/> series; otherwise a failing one.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="max"/> is less than 1.</exception>
+    [GenerateAssertion(ExpectationMessage = "to have at most {max} series", InlineMethodBody = false)]
+    public static AssertionResult HasSeriesCountAtMost(this InstrumentCapture value, int max)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(max);
+        MeasurementSet set = value.Measurements;
+        return MeasurementDiagnostics.SeriesCountAtMost(set, set, max);
     }
 }

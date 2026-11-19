@@ -36,4 +36,7 @@ public partial class Prelude
 
     /// <summary>The address a client under test calls.</summary>
     protected Uri url { get; set; } = new("http://localhost/");
+
+    /// <summary>A meter factory of the test's own, as the test host's dependency injection container provides one.</summary>
+    protected IMeterFactory meterFactory { get; set; } = null!;
 }

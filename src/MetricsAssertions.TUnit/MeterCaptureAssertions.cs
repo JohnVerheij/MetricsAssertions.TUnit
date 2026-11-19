@@ -108,6 +108,52 @@ public static class MeterCaptureAssertions
             : MeasurementDiagnostics.Failed(all, "none matched");
     }
 
+    /// <summary>Asserts the tag <paramref name="tagKey"/> of a bundled instrument has at most <paramref name="max"/>
+    /// distinct values, a budget on the tag's cardinality: a tag fed from an unbounded source (an id, a raw path) fails it.</summary>
+    /// <param name="value">The meter capture.</param>
+    /// <param name="instrumentName">The instrument name.</param>
+    /// <param name="tagKey">The tag key whose distinct values are counted.</param>
+    /// <param name="max">The most distinct values allowed (at least 1).</param>
+    /// <remarks>Measurements without the tag do not count, and values compare as invariant text, as in <see cref="MeasurementSet.DistinctTagValues"/>. The assertion fails when no measurement of the instrument carries the tag, so a misspelled key or an instrument that emitted nothing does not pass. A failure lists the values, the first 20 of them. For a budget across the bundle, assert on <see cref="MeterCapture.Measurements"/>.</remarks>
+    /// <returns>A passing assertion when the tag has at most <paramref name="max"/> distinct values; otherwise a failing one.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/>, <paramref name="instrumentName"/>, or
+    /// <paramref name="tagKey"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="max"/> is less than 1.</exception>
+    [GenerateAssertion(ExpectationMessage = "to have at most {max} distinct value(s) of tag {tagKey} for {instrumentName}", InlineMethodBody = false)]
+    public static AssertionResult HasTagCardinalityAtMost(this MeterCapture value, string instrumentName, string tagKey, int max)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(instrumentName);
+        ArgumentNullException.ThrowIfNull(tagKey);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(max);
+        if (!value.Contains(instrumentName))
+            return NotBundled(value, instrumentName);
+        MeasurementSet all = value.Measurements;
+        return MeasurementDiagnostics.TagCardinalityAtMost(all.ForInstrument(instrumentName), all, tagKey, max);
+    }
+
+    /// <summary>Asserts the measurements of a bundled instrument form at most <paramref name="max"/> series, a budget on the
+    /// instrument's series cardinality. A series is a distinct tag set (see <see cref="MeasurementSet.DistinctSeries"/>).</summary>
+    /// <param name="value">The meter capture.</param>
+    /// <param name="instrumentName">The instrument name.</param>
+    /// <param name="max">The most series allowed (at least 1).</param>
+    /// <remarks>The assertion fails when the instrument recorded nothing, so an instrument that emitted nothing does not pass. A failure lists the series, the first 20 of them. For a budget across the bundle, assert on <see cref="MeterCapture.Measurements"/>.</remarks>
+    /// <returns>A passing assertion when the measurements form at most <paramref name="max"/> series; otherwise a failing one.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> or <paramref name="instrumentName"/> is
+    /// <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="max"/> is less than 1.</exception>
+    [GenerateAssertion(ExpectationMessage = "to have at most {max} series for {instrumentName}", InlineMethodBody = false)]
+    public static AssertionResult HasSeriesCountAtMost(this MeterCapture value, string instrumentName, int max)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(instrumentName);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(max);
+        if (!value.Contains(instrumentName))
+            return NotBundled(value, instrumentName);
+        MeasurementSet all = value.Measurements;
+        return MeasurementDiagnostics.SeriesCountAtMost(all.ForInstrument(instrumentName), all, max);
+    }
+
     /// <summary>Builds the failure for an instrument name that was never added to the capture.</summary>
     /// <param name="capture">The capture the assertion ran on.</param>
     /// <param name="instrumentName">The instrument name that is not bundled.</param>

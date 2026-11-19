@@ -18,7 +18,8 @@ namespace MetricsAssertions.TUnit.Tests;
 [Timeout(30_000)]
 internal sealed class ReviewSweepTests
 {
-    private const int Emissions = 20_000;
+    private const int Emissions = 2_000;
+    private const int Passes = 50;
     private const string Prefix = "    orders = ";
 
     /// <summary>Returns the failure message of <paramref name="assertion"/> without TUnit's trailing call-site line.</summary>
@@ -64,41 +65,43 @@ internal sealed class ReviewSweepTests
     }
 
     /// <summary>
-    /// Runs <paramref name="assertion"/> again and again while another thread keeps emitting to <paramref name="counter"/>,
-    /// and counts the failure messages that <paramref name="consistent"/> rejects.
+    /// Runs <paramref name="assertion"/> <see cref="Passes"/> times while another thread keeps emitting to
+    /// <paramref name="counter"/>, and counts the failure messages that <paramref name="consistent"/> rejects. The work is
+    /// bounded (passes and emissions), not bound to how fast the emitter runs, so the test takes as long on a loaded machine
+    /// as the passes need.
     /// </summary>
     private static async Task AssertConsistentWhileEmittingAsync(Counter<long> counter, Func<Task> assertion, Func<string, bool> consistent)
     {
         using var started = new ManualResetEventSlim();
-        var done = 0;
+        var stop = 0;
         var emitter = new Thread(() =>
         {
-            for (var i = 0; i < Emissions; i++)
+            for (var i = 0; i < Emissions && Volatile.Read(ref stop) == 0; i++)
             {
                 counter.Add(i + 1);
                 started.Set();
                 Thread.Yield();
             }
 
-            Volatile.Write(ref done, 1);
+            started.Set();
         });
         emitter.Start();
         try
         {
             started.Wait();
             var inconsistent = new List<string>();
-            do
+            for (var pass = 0; pass < Passes; pass++)
             {
                 var message = await MessageAsync(assertion);
                 if (!consistent(message))
                     inconsistent.Add(message.Length > 300 ? message[..300] : message);
             }
-            while (Volatile.Read(ref done) == 0);
 
             await Assert.That(inconsistent).IsEmpty();
         }
         finally
         {
+            Volatile.Write(ref stop, 1);
             emitter.Join();
         }
     }

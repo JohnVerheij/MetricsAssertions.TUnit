@@ -17,6 +17,10 @@ namespace MetricsAssertions.TUnit
         public static TUnit.Assertions.Core.AssertionResult HasMeasurementCount(this MetricsAssertions.InstrumentCapture value, int expected) { }
         [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have no measurements", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasNoMeasurements(this MetricsAssertions.InstrumentCapture value) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have at most {max} series", InlineMethodBody=false)]
+        public static TUnit.Assertions.Core.AssertionResult HasSeriesCountAtMost(this MetricsAssertions.InstrumentCapture value, int max) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have at most {max} distinct value(s) of tag {tagKey}", InlineMethodBody=false)]
+        public static TUnit.Assertions.Core.AssertionResult HasTagCardinalityAtMost(this MetricsAssertions.InstrumentCapture value, string tagKey, int max) { }
         [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have a measurement tagged {tagKey}={tagValue}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasTaggedMeasurement(this MetricsAssertions.InstrumentCapture value, string tagKey, object? tagValue) { }
         [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have up-down counter value {expected}", InlineMethodBody=false)]
@@ -48,6 +52,10 @@ namespace MetricsAssertions.TUnit
         public static TUnit.Assertions.Core.AssertionResult HasSamplesInAnyOrder(this MetricsAssertions.MeasurementSet value, params double[] expected) { }
         [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have the expected samples in any order, each within {tolerance}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasSamplesInAnyOrder(this MetricsAssertions.MeasurementSet value, System.Collections.Generic.IReadOnlyList<double> expected, double tolerance) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have at most {max} series", InlineMethodBody=false)]
+        public static TUnit.Assertions.Core.AssertionResult HasSeriesCountAtMost(this MetricsAssertions.MeasurementSet value, int max) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have at most {max} distinct value(s) of tag {tagKey}", InlineMethodBody=false)]
+        public static TUnit.Assertions.Core.AssertionResult HasTagCardinalityAtMost(this MetricsAssertions.MeasurementSet value, string tagKey, int max) { }
         [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have a measurement tagged {tagKey}={tagValue}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasTaggedMeasurement(this MetricsAssertions.MeasurementSet value, string tagKey, object? tagValue) { }
     }
@@ -57,6 +65,10 @@ namespace MetricsAssertions.TUnit
         public static TUnit.Assertions.Core.AssertionResult HasCounterTotal(this MetricsAssertions.MeterCapture value, string instrumentName, long expected) { }
         [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have {expected} measurement(s) for {instrumentName}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasMeasurementCount(this MetricsAssertions.MeterCapture value, string instrumentName, int expected) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have at most {max} series for {instrumentName}", InlineMethodBody=false)]
+        public static TUnit.Assertions.Core.AssertionResult HasSeriesCountAtMost(this MetricsAssertions.MeterCapture value, string instrumentName, int max) { }
+        [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have at most {max} distinct value(s) of tag {tagKey} for {instrumentName}", InlineMethodBody=false)]
+        public static TUnit.Assertions.Core.AssertionResult HasTagCardinalityAtMost(this MetricsAssertions.MeterCapture value, string instrumentName, string tagKey, int max) { }
         [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have a measurement for {instrumentName} tagged {tagKey}={tagValue}", InlineMethodBody=false)]
         public static TUnit.Assertions.Core.AssertionResult HasTaggedMeasurement(this MetricsAssertions.MeterCapture value, string instrumentName, string tagKey, object? tagValue) { }
         [TUnit.Assertions.Attributes.GenerateAssertion(ExpectationMessage="to have up-down counter {instrumentName} value {expected}", InlineMethodBody=false)]
@@ -73,6 +85,8 @@ namespace TUnit.Assertions.Extensions
         public static TUnit.Assertions.Extensions.InstrumentCapture_HasLastValue_Double_Double_Assertion HasLastValue(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, double expected, double tolerance, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tolerance")] string? toleranceExpression = null) { }
         public static TUnit.Assertions.Extensions.InstrumentCapture_HasMeasurementCount_Int_Assertion HasMeasurementCount(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, int expected, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
         public static TUnit.Assertions.Extensions.InstrumentCapture_HasNoMeasurements_Assertion HasNoMeasurements(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source) { }
+        public static TUnit.Assertions.Extensions.InstrumentCapture_HasSeriesCountAtMost_Int_Assertion HasSeriesCountAtMost(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, int max, [System.Runtime.CompilerServices.CallerArgumentExpression("max")] string? maxExpression = null) { }
+        public static TUnit.Assertions.Extensions.InstrumentCapture_HasTagCardinalityAtMost_String_Int_Assertion HasTagCardinalityAtMost(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, string tagKey, int max, [System.Runtime.CompilerServices.CallerArgumentExpression("tagKey")] string? tagKeyExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("max")] string? maxExpression = null) { }
         public static TUnit.Assertions.Extensions.InstrumentCapture_HasTaggedMeasurement_String_Object_Assertion HasTaggedMeasurement(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, string tagKey, object? tagValue, [System.Runtime.CompilerServices.CallerArgumentExpression("tagKey")] string? tagKeyExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tagValue")] string? tagValueExpression = null) { }
         public static TUnit.Assertions.Extensions.InstrumentCapture_HasUpDownCounterValue_Long_Assertion HasUpDownCounterValue(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.InstrumentCapture> source, long expected, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
     }
@@ -112,6 +126,18 @@ namespace TUnit.Assertions.Extensions
         protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.InstrumentCapture> metadata) { }
         protected override string GetExpectation() { }
     }
+    public sealed class InstrumentCapture_HasSeriesCountAtMost_Int_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.InstrumentCapture>
+    {
+        public InstrumentCapture_HasSeriesCountAtMost_Int_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.InstrumentCapture> context, int max) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.InstrumentCapture> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class InstrumentCapture_HasTagCardinalityAtMost_String_Int_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.InstrumentCapture>
+    {
+        public InstrumentCapture_HasTagCardinalityAtMost_String_Int_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.InstrumentCapture> context, string tagKey, int max) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.InstrumentCapture> metadata) { }
+        protected override string GetExpectation() { }
+    }
     public sealed class InstrumentCapture_HasTaggedMeasurement_String_Object_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.InstrumentCapture>
     {
         public InstrumentCapture_HasTaggedMeasurement_String_Object_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.InstrumentCapture> context, string tagKey, object? tagValue) { }
@@ -138,6 +164,8 @@ namespace TUnit.Assertions.Extensions
         public static TUnit.Assertions.Extensions.MeasurementSet_HasSamples_IReadOnlyListDouble_Double_Assertion HasSamples(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, System.Collections.Generic.IReadOnlyList<double> expected, double tolerance, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tolerance")] string? toleranceExpression = null) { }
         public static TUnit.Assertions.Extensions.MeasurementSet_HasSamplesInAnyOrder_DoubleArray_Assertion HasSamplesInAnyOrder(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, params double[] expected) { }
         public static TUnit.Assertions.Extensions.MeasurementSet_HasSamplesInAnyOrder_IReadOnlyListDouble_Double_Assertion HasSamplesInAnyOrder(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, System.Collections.Generic.IReadOnlyList<double> expected, double tolerance, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tolerance")] string? toleranceExpression = null) { }
+        public static TUnit.Assertions.Extensions.MeasurementSet_HasSeriesCountAtMost_Int_Assertion HasSeriesCountAtMost(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, int max, [System.Runtime.CompilerServices.CallerArgumentExpression("max")] string? maxExpression = null) { }
+        public static TUnit.Assertions.Extensions.MeasurementSet_HasTagCardinalityAtMost_String_Int_Assertion HasTagCardinalityAtMost(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, string tagKey, int max, [System.Runtime.CompilerServices.CallerArgumentExpression("tagKey")] string? tagKeyExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("max")] string? maxExpression = null) { }
         public static TUnit.Assertions.Extensions.MeasurementSet_HasTaggedMeasurement_String_Object_Assertion HasTaggedMeasurement(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeasurementSet> source, string tagKey, object? tagValue, [System.Runtime.CompilerServices.CallerArgumentExpression("tagKey")] string? tagKeyExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tagValue")] string? tagValueExpression = null) { }
     }
     public sealed class MeasurementSet_HasAllSamplesInRange_Double_Double_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
@@ -212,6 +240,18 @@ namespace TUnit.Assertions.Extensions
         protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
         protected override string GetExpectation() { }
     }
+    public sealed class MeasurementSet_HasSeriesCountAtMost_Int_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
+    {
+        public MeasurementSet_HasSeriesCountAtMost_Int_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, int max) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeasurementSet_HasTagCardinalityAtMost_String_Int_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
+    {
+        public MeasurementSet_HasTagCardinalityAtMost_String_Int_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, string tagKey, int max) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeasurementSet> metadata) { }
+        protected override string GetExpectation() { }
+    }
     public sealed class MeasurementSet_HasTaggedMeasurement_String_Object_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeasurementSet>
     {
         public MeasurementSet_HasTaggedMeasurement_String_Object_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeasurementSet> context, string tagKey, object? tagValue) { }
@@ -222,6 +262,8 @@ namespace TUnit.Assertions.Extensions
     {
         public static TUnit.Assertions.Extensions.MeterCapture_HasCounterTotal_String_Long_Assertion HasCounterTotal(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeterCapture> source, string instrumentName, long expected, [System.Runtime.CompilerServices.CallerArgumentExpression("instrumentName")] string? instrumentNameExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
         public static TUnit.Assertions.Extensions.MeterCapture_HasMeasurementCount_String_Int_Assertion HasMeasurementCount(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeterCapture> source, string instrumentName, int expected, [System.Runtime.CompilerServices.CallerArgumentExpression("instrumentName")] string? instrumentNameExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
+        public static TUnit.Assertions.Extensions.MeterCapture_HasSeriesCountAtMost_String_Int_Assertion HasSeriesCountAtMost(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeterCapture> source, string instrumentName, int max, [System.Runtime.CompilerServices.CallerArgumentExpression("instrumentName")] string? instrumentNameExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("max")] string? maxExpression = null) { }
+        public static TUnit.Assertions.Extensions.MeterCapture_HasTagCardinalityAtMost_String_String_Int_Assertion HasTagCardinalityAtMost(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeterCapture> source, string instrumentName, string tagKey, int max, [System.Runtime.CompilerServices.CallerArgumentExpression("instrumentName")] string? instrumentNameExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tagKey")] string? tagKeyExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("max")] string? maxExpression = null) { }
         public static TUnit.Assertions.Extensions.MeterCapture_HasTaggedMeasurement_String_String_Object_Assertion HasTaggedMeasurement(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeterCapture> source, string instrumentName, string tagKey, object? tagValue, [System.Runtime.CompilerServices.CallerArgumentExpression("instrumentName")] string? instrumentNameExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tagKey")] string? tagKeyExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("tagValue")] string? tagValueExpression = null) { }
         public static TUnit.Assertions.Extensions.MeterCapture_HasUpDownCounterValue_String_Long_Assertion HasUpDownCounterValue(this TUnit.Assertions.Core.IAssertionSource<MetricsAssertions.MeterCapture> source, string instrumentName, long expected, [System.Runtime.CompilerServices.CallerArgumentExpression("instrumentName")] string? instrumentNameExpression = null, [System.Runtime.CompilerServices.CallerArgumentExpression("expected")] string? expectedExpression = null) { }
     }
@@ -234,6 +276,18 @@ namespace TUnit.Assertions.Extensions
     public sealed class MeterCapture_HasMeasurementCount_String_Int_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeterCapture>
     {
         public MeterCapture_HasMeasurementCount_String_Int_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeterCapture> context, string instrumentName, int expected) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeterCapture> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeterCapture_HasSeriesCountAtMost_String_Int_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeterCapture>
+    {
+        public MeterCapture_HasSeriesCountAtMost_String_Int_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeterCapture> context, string instrumentName, int max) { }
+        protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeterCapture> metadata) { }
+        protected override string GetExpectation() { }
+    }
+    public sealed class MeterCapture_HasTagCardinalityAtMost_String_String_Int_Assertion : TUnit.Assertions.Core.Assertion<MetricsAssertions.MeterCapture>
+    {
+        public MeterCapture_HasTagCardinalityAtMost_String_String_Int_Assertion(TUnit.Assertions.Core.AssertionContext<MetricsAssertions.MeterCapture> context, string instrumentName, string tagKey, int max) { }
         protected override System.Threading.Tasks.Task<TUnit.Assertions.Core.AssertionResult> CheckAsync(TUnit.Assertions.Core.EvaluationMetadata<MetricsAssertions.MeterCapture> metadata) { }
         protected override string GetExpectation() { }
     }

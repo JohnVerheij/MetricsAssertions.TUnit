@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://img.shields.io/badge/.NET-10.0%20%7C%2011.0-512BD4.svg)](https://dotnet.microsoft.com/download/dotnet)
 
-TUnit-native assertions over `System.Diagnostics.Metrics` instruments for .NET tests. Fluent entry points over TUnit's `Assert.That(...)` pipeline for asserting on captured measurements, with a framework-agnostic core (`MetricsAssertions`) underneath. Targets .NET 10 and .NET 11. AOT-compatible, trimmable, no runtime reflection in the assertion path. Capture is the first-party `MetricCollector` testing primitive over a `System.Diagnostics.Metrics` instrument: no OpenTelemetry SDK or exporter pipeline.
+TUnit-native assertions over `System.Diagnostics.Metrics` instruments for .NET tests. Fluent entry points over TUnit's `Assert.That(...)` pipeline for asserting on captured measurements, with a framework-agnostic core (`MetricsAssertions`) underneath. Targets .NET 10 and .NET 11. AOT-compatible, trimmable, no runtime reflection in the assertion path. Capture is built on the first-party `MetricCollector` testing primitive (a flow-scoped capture uses its own `MeterListener`): no OpenTelemetry SDK or exporter pipeline.
 
 > **Scope:** Test projects only. Not intended for production code.
 
@@ -21,11 +21,13 @@ TUnit-native assertions over `System.Diagnostics.Metrics` instruments for .NET t
 ## Table of contents
 
 - [Why this package](#why-this-package)
+- [Compared with `MetricCollector<T>`](#compared-with-metriccollectort)
 - [Install](#install)
 - [Package layout](#package-layout)
 - [Namespaces](#namespaces)
 - [Quick start](#quick-start)
 - [Entry points](#entry-points)
+- [Tag and series cardinality](#tag-and-series-cardinality)
 - [Failure diagnostics](#failure-diagnostics)
 - [Design notes](#design-notes)
 - [Observable instruments and .NET 11](#observable-instruments-and-net-11)
@@ -46,6 +48,58 @@ TUnit-native assertions over `System.Diagnostics.Metrics` instruments for .NET t
 - A full TUnit `Assert.That(...).Has*` vocabulary over captures, measurement sets, and multi-instrument `MeterCapture` bundles, source-generated via `[GenerateAssertion]`.
 
 The framework-agnostic `MetricsAssertions` core ships separately so non-TUnit consumers can reuse the capture and query surface.
+
+## Compared with `MetricCollector<T>`
+
+`MetricCollector<T>` (in `Microsoft.Extensions.Diagnostics.Testing`) is the capture Microsoft Learn recommends for testing metrics, and this package builds on it. It records the measurements of one instrument; the test reads a snapshot and checks it by hand:
+
+```csharp
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using Microsoft.Extensions.Diagnostics.Metrics.Testing;
+
+using var meter = new Meter("MyCompany.Orders");
+var placed = meter.CreateCounter<long>("orders.placed");
+using var collector = new MetricCollector<long>(placed);
+
+var tenantA = new TagList { { "tenant", "a" } };
+placed.Add(2, tenantA);
+placed.Add(3, tenantA);
+
+var snapshot = collector.GetMeasurementSnapshot();
+await Assert.That(snapshot.Count).IsEqualTo(2);
+await Assert.That(snapshot.Sum(m => m.Value)).IsEqualTo(5);
+await Assert.That(snapshot.All(m => Equals(m.Tags["tenant"], "a"))).IsTrue();
+```
+
+The same test with this package:
+
+```csharp
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using MetricsAssertions;
+
+using var meter = new Meter("MyCompany.Orders");
+var placed = meter.CreateCounter<long>("orders.placed");
+using var capture = InstrumentCapture.Of(placed);
+
+var tenantA = new TagList { { "tenant", "a" } };
+placed.Add(2, tenantA);
+placed.Add(3, tenantA);
+
+await Assert.That(capture).HasMeasurementCount(2);
+await Assert.That(capture).HasCounterTotal(5);
+await Assert.That(capture.Tagged("tenant", "a")).HasMeasurementCount(2);
+```
+
+What the package adds:
+
+- **Assertions with the evidence.** Every `Has*` assertion lists the captured measurements under its failure, where a check on the snapshot reports only the mismatched number.
+- **A meter at a time.** `MeterCapture` bundles several instruments of a meter; `MetricCollector<T>` takes one instrument.
+- **One query surface.** `MeasurementSet` gives totals, sums, averages, ordered and unordered samples (with a tolerance), tag narrowing, the delta since a baseline (`Snapshot` / `Since`), and [tag and series cardinality](#tag-and-series-cardinality), for every value type, because values are projected to `double`.
+- **Isolation from tests running in parallel.** A capture by name attaches to the first matching instrument in the process, in both. `InCurrentFlow()` records only the async flow of the test, and capture by `Meter` instance or by meter scope keeps a same-named meter of another test out (see [Capture lifetime and isolation](#capture-lifetime-and-isolation)).
+
+Stay with `MetricCollector<T>` when a test needs the typed value: a `long` above 2^53 or a `decimal` compared exactly, which a `double` cannot always hold (see [Values are projected to `double`](#values-are-projected-to-double)).
 
 ## Install
 
@@ -148,6 +202,8 @@ Assertions on `Assert.That(capture)` where `capture` is an `InstrumentCapture`:
 | `HasNoMeasurements()` | No measurements were captured. |
 | `HasLastValue(v)` / `HasLastValue(v, tolerance)` | The most recently captured value equals `v` (exactly, or within an absolute tolerance for computed doubles). |
 | `HasTaggedMeasurement(key, value)` | At least one measurement carries the tag `key = value`. |
+| `HasTagCardinalityAtMost(key, max)` *(v0.7.0+)* | The tag `key` has at most `max` distinct values. Fails when no measurement carries the tag. See [Tag and series cardinality](#tag-and-series-cardinality). |
+| `HasSeriesCountAtMost(max)` *(v0.7.0+)* | The measurements form at most `max` series (distinct tag sets). Fails when nothing was captured. |
 
 Assertions on `Assert.That(set)` where `set` is a `MeasurementSet` (e.g. `capture.Measurements`, `capture.Tagged(...)`, `capture.Since(...)`):
 
@@ -160,6 +216,8 @@ Assertions on `Assert.That(set)` where `set` is a `MeasurementSet` (e.g. `captur
 | `HasSamples(...)` / `HasSamplesInAnyOrder(...)` | The samples equal the expected values, in order / in any order. A `(IReadOnlyList<double> expected, double tolerance)` overload of each compares within an absolute per-sample tolerance. |
 | `HasEveryMeasurementTagged(key)` | Every measurement carries a tag with the given key. |
 | `HasTaggedMeasurement(key, value)` | At least one measurement carries the tag `key = value`. |
+| `HasTagCardinalityAtMost(key, max)` *(v0.7.0+)* | The tag `key` has at most `max` distinct values. Fails when no measurement carries the tag. |
+| `HasSeriesCountAtMost(max)` *(v0.7.0+)* | The set holds at most `max` series (distinct combinations of instrument name and tag set). Fails on an empty set. |
 
 Assertions on `Assert.That(meter)` where `meter` is a multi-instrument `MeterCapture`, addressing one bundled instrument by name:
 
@@ -168,6 +226,7 @@ Assertions on `Assert.That(meter)` where `meter` is a multi-instrument `MeterCap
 | `HasCounterTotal(name, n)` / `HasUpDownCounterValue(name, n)` | The named counter's net total / value equals `n`. |
 | `HasMeasurementCount(name, n)` | The named instrument captured exactly `n` measurements. |
 | `HasTaggedMeasurement(name, key, value)` | The named instrument has a measurement tagged `key = value`. |
+| `HasTagCardinalityAtMost(name, key, max)` / `HasSeriesCountAtMost(name, max)` *(v0.7.0+)* | The tag `key` of the named instrument has at most `max` distinct values / the named instrument's measurements form at most `max` series. Each fails when there is nothing to count. |
 
 The `MetricsAssertions` core exposes the capture and query surface for reading measurements without an assertion:
 
@@ -180,6 +239,7 @@ The `MetricsAssertions` core exposes the capture and query surface for reading m
 | `InstrumentCapture.Snapshot` / `Since` | Take a `MeasurementBaseline` and query only the measurements recorded after it (an action's delta). |
 | `InstrumentCapture.RecordObservable` / `WaitForAsync` | Pull observable-gauge values; await a measurement count. |
 | `MeasurementSet` | An immutable, queryable set: `Total`/`Sum`/`Min`/`Max`/`Average`/`Values`, `Tagged`/`ForInstrument`, sample comparisons, and `ToSnapshotString`. |
+| `MeasurementSet.DistinctTagValues(key)` / `DistinctSeries()` *(v0.7.0+)* | The distinct values of a tag, as invariant text, and the distinct series, each in the order first captured. |
 | `MeterCapture.For` + `Add` | Build a meter-wide bundle and query per instrument or across all via `Measurements`. |
 | `MeterCapture[name]` / `Contains(name)` | The `InstrumentCapture` of a bundled instrument, and whether one is bundled. |
 | `MeterCapture.CounterTotal(name)` / `Samples(name)` / `MeasurementCount(name)` / `HasMeasurementTagged(name, key, value)` | Per-instrument reads without an assertion. |
@@ -190,6 +250,57 @@ The `MetricsAssertions` core exposes the capture and query surface for reading m
 | `MeterCapture.For(meter)` / `InstrumentCapture.OfName<T>(meter, name)` *(v0.4.0+)* | Capture one `Meter` instance only, so a same-named meter of a test running in parallel is not captured. |
 | `MeterInspector` | Discover a meter's published instruments (`PublishedInstrumentNames` / `IsPublished` / `PublishesAll`). |
 | `CapturedMeasurement` | A captured measurement: instrument name, value projected to `double`, tags, and timestamp. |
+
+## Tag and series cardinality
+
+A metrics backend stores one time series per distinct tag set of an instrument. A tag fed from an unbounded source, such as an order id, a user id or a raw URL path in place of a route template, makes the number of series grow with the traffic, and with it the memory and the cost of the backend. A test can put a budget on both:
+
+```csharp
+using System.Diagnostics.Metrics;
+using MetricsAssertions;
+
+using var meter = new Meter("MyCompany.Orders");
+var orders = new OrderService(meter, TimeProvider.System);
+using var capture = MeterCapture.For(meter).Add<long>("orders.placed");
+
+for (var i = 0; i < 5; i++)
+    await orders.PlaceAsync($"A-{i}");
+
+// Tenants are a closed set, and each tenant has at most two statuses.
+await Assert.That(capture).HasTagCardinalityAtMost("orders.placed", "tenant", 3);
+await Assert.That(capture).HasSeriesCountAtMost("orders.placed", 6);
+```
+
+- `HasTagCardinalityAtMost(key, max)` counts the distinct values of one tag. Measurements without the tag do not count.
+- `HasSeriesCountAtMost(max)` counts the series: the distinct tag sets of the instrument (on a `MeasurementSet` that spans instruments, the distinct combinations of instrument name and tag set). The order of the tags does not matter, and a measurement without a tag is in another series than one with it.
+- Both fail when there is nothing to count: no measurement carries the tag, or nothing was captured. A misspelled tag key or an instrument that emitted nothing does not pass.
+- Values compare as invariant text, as `Tagged` compares them: the `int` 200 and the string `"200"` are one value, a `null` value is the empty string, and an array value (`string[]`, `long[]`) reads as its elements, `[a, b]`.
+- The failure lists the values or the series above the captured measurements; after 20 entries it says how many more there are (`... and 30 more`).
+
+If the service puts the order id in the `tenant` tag, the first assertion fails with:
+
+```
+Expected to have at most 3 distinct value(s) of tag tenant for orders.placed
+but it had 5
+  values:
+    "A-0"
+    "A-1"
+    "A-2"
+    "A-3"
+    "A-4"
+  captured:
+    orders.placed = 1 {status=placed,tenant=A-0} @ 2026-11-19T19:30:00.0000000+00:00
+    orders.placed = 1 {status=placed,tenant=A-1} @ 2026-11-19T19:30:00.0000000+00:00
+    orders.placed = 1 {status=placed,tenant=A-2} @ 2026-11-19T19:30:00.0000000+00:00
+    orders.placed = 1 {status=placed,tenant=A-3} @ 2026-11-19T19:30:00.0000000+00:00
+    orders.placed = 1 {status=placed,tenant=A-4} @ 2026-11-19T19:30:00.0000000+00:00
+```
+
+Without an assertion, `MeasurementSet.DistinctTagValues(key)` and `DistinctSeries()` return the values and the series in the order they were first captured. For an exact list, use TUnit's collection assertions on them:
+
+```csharp
+await Assert.That(capture.Measurements.DistinctTagValues("tenant")).IsEquivalentTo(new[] { "eu-1", "eu-2" });
+```
 
 ## Failure diagnostics
 
@@ -204,7 +315,7 @@ but it had 1
 at Assert.That(capture).HasMeasurementCount(2)
 ```
 
-When a [flow-scoped capture](#capture-lifetime-and-isolation) is empty but other tests emitted to the same instrument, the dump says so instead of the bare "no measurements captured":
+When a [flow-scoped capture](#capture-lifetime-and-isolation) ignored measurements that other tests emitted to the same instruments, the dump says how many: on a last line after the measurements, or, when the capture holds none, in place of the bare "no measurements captured":
 
 ```
     (no measurements captured; 3 measurement(s) of the captured instruments were emitted by other flows and ignored, because this capture records only the flow that created it)
@@ -223,6 +334,8 @@ await Assert.That(capture).HasMeasurementCount(2).Because("each retry records on
 ### Why `MetricCollector<T>`, not a raw `MeterListener`
 
 Capture is built on the first-party `MetricCollector<T>` from `Microsoft.Extensions.Diagnostics.Testing`, not a hand-rolled `MeterListener`. `MetricCollector<T>` is the BCL's purpose-built measurement-capture primitive: strongly typed, with built-in measurement snapshots and an injectable `TimeProvider`. Building on it keeps the capture small and correct, at the cost of one NuGet runtime dependency (`Microsoft.Extensions.Diagnostics.Testing`, a Microsoft-shipped package). No OpenTelemetry SDK or exporter pipeline is involved.
+
+A flow-scoped capture (`InCurrentFlow()`) is the exception: it has to see each measurement on the thread that records it, to tell the test's own flow from the others, and to attach to every matching instrument instead of the first. `MetricCollector<T>` offers neither, so a flow-scoped capture uses its own `MeterListener`.
 
 ### Capture lifetime and isolation
 
@@ -286,7 +399,7 @@ Tolerance comparisons never match a value that is not a number (a `NaN` sample, 
 
 A carriage return or line feed inside an instrument name, tag key or tag value is written as `\r` or `\n` in the failure dump, `MeasurementSet.Describe()` and `ToSnapshotString()`, so every measurement stays on one line.
 
-Tag values are compared as invariant text: for a tag whose value is the `bool` `true`, `Tagged("ok", true)` and `Tagged("ok", "True")` match and `Tagged("ok", "true")` does not, and a `null` tag value equals an empty string, as does a value whose `ToString()` returns `null`.
+Tag values are compared as invariant text: for a tag whose value is the `bool` `true`, `Tagged("ok", true)` and `Tagged("ok", "True")` match and `Tagged("ok", "true")` does not, and a `null` tag value equals an empty string, as does a value whose `ToString()` returns `null`. An array tag value (`string[]`, `long[]`, ...) reads as its elements, `[a, b]`, in comparisons, in the failure dump and in `ToSnapshotString()`.
 
 ### Assertions are kind-named, not kind-checked
 
@@ -300,11 +413,15 @@ A capture by name attaches to nothing when the meter or instrument name has a ty
 
 An observable instrument (`ObservableGauge<T>`, `ObservableCounter<T>`, `ObservableUpDownCounter<T>`) reports a value only when something asks for it. A capture asks when you call `RecordObservable()`, on an `InstrumentCapture` or a `MeterCapture`; until then the capture holds nothing for it.
 
-On .NET 11 the `System.Net.Http` metrics `http.client.open_connections` and `http.client.active_requests` are observable instruments (on .NET 10 they are up-down counters, whose measurements arrive as the connections and requests change), so a capture of them needs `RecordObservable()`. Calling it on .NET 10 does no harm:
+On .NET 11 the `System.Net.Http` metrics `http.client.open_connections` and `http.client.active_requests` are observable instruments (on .NET 10 they are up-down counters, whose measurements arrive as the connections and requests change), so a capture of them needs `RecordObservable()`. Calling it on .NET 10 does no harm.
+
+On .NET 11 every `HttpClient` handler also publishes its own instrument of each on the one `System.Net.Http` meter, and a capture by name attaches to the first of them in the process, which in a test suite can be another test's client. Give the client a meter factory of the test's own and capture with that factory as the meter scope:
 
 ```csharp
-using var client = new HttpClient();
-using var capture = MeterCapture.For("System.Net.Http")
+// meterFactory: an IMeterFactory of the test's own, for example from services.AddMetrics().
+using var handler = new SocketsHttpHandler { MeterFactory = meterFactory };
+using var client = new HttpClient(handler);
+using var capture = MeterCapture.For("System.Net.Http", meterFactory)
     .Add<long>("http.client.open_connections");
 
 await client.GetStringAsync(url);

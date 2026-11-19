@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -11,7 +12,8 @@ namespace MetricsAssertions;
 /// Produced by an <see cref="InstrumentCapture"/> or <see cref="MeterCapture"/> and narrowed with
 /// <see cref="Tagged(string, object?)"/> / <see cref="ForInstrument"/>. Exposes counter-style aggregates
 /// (<see cref="Total"/>), histogram-style aggregates (<see cref="Sum"/>/<see cref="Min"/>/<see cref="Max"/>/
-/// <see cref="Average"/>), the raw <see cref="Values"/> and <see cref="All"/> measurements, and a
+/// <see cref="Average"/>), the raw <see cref="Values"/> and <see cref="All"/> measurements, the tag and series
+/// cardinality (<see cref="DistinctTagValues"/> / <see cref="DistinctSeries"/>), and a
 /// deterministic <see cref="ToSnapshotString"/> projection for snapshot-style baselines.
 /// </summary>
 public sealed class MeasurementSet
@@ -192,6 +194,81 @@ public sealed class MeasurementSet
     public bool EveryMeasurementCarriesTag(string key)
         => All.Count > 0 && All.All(m => m.Tags.ContainsKey(key));
 
+    /// <summary>Returns the distinct values of the tag <paramref name="key"/>, in the order they were first captured: the
+    /// tag's cardinality is the count. A value is the invariant text that <see cref="Tagged(string, object?)"/> compares
+    /// by, so the <see cref="int"/> 200 and the string <c>"200"</c> are one value, a <see langword="null"/> value is
+    /// the empty string, and an array value reads as its elements, <c>[a, b]</c>. Measurements without the tag do not count.</summary>
+    /// <param name="key">The tag key.</param>
+    /// <returns>The distinct values, empty when no measurement carries the tag.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
+    public IReadOnlyList<string> DistinctTagValues(string key)
+    {
+        ArgumentNullException.ThrowIfNull(key);
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var values = new List<string>();
+        foreach (CapturedMeasurement m in All)
+        {
+            if (!m.Tags.TryGetValue(key, out var value))
+                continue;
+            var text = TagText(value);
+            if (seen.Add(text))
+                values.Add(text);
+        }
+
+        return values;
+    }
+
+    /// <summary>Returns one entry per series of the set, in the order each series was first captured: the series
+    /// cardinality is the count. A series is a distinct combination of an instrument name and a tag set, which is what
+    /// a metrics backend stores as one time series. Tags count in any order, with their values compared as invariant
+    /// text as in <see cref="DistinctTagValues"/>; a measurement without a tag is in another series than one that has it.
+    /// An entry reads as a line of <see cref="ToSnapshotString"/> without the value, for example
+    /// <c>orders.placed {region=eu,tenant=a}</c>.</summary>
+    /// <remarks>Series are told apart by their names, keys and values, not by the entry text, so two series whose tag
+    /// values differ by a comma or an equals sign are two entries even if they read alike.</remarks>
+    /// <returns>The series, empty when the set is empty.</returns>
+    public IReadOnlyList<string> DistinctSeries()
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        return [.. All.Where(m => seen.Add(SeriesIdentity(m))).Select(SeriesText)];
+    }
+
+    /// <summary>The identity of the series of <paramref name="measurement"/>: the instrument name, then every tag key and
+    /// value text in key order, each prefixed by its length, so no text inside a name, key or value can make two
+    /// different series equal.</summary>
+    /// <param name="measurement">The measurement.</param>
+    /// <returns>The identity, equal for two measurements of the same series only.</returns>
+    private static string SeriesIdentity(CapturedMeasurement measurement)
+    {
+        var sb = new StringBuilder();
+        AppendPart(sb, measurement.InstrumentName);
+        foreach (KeyValuePair<string, object?> tag in measurement.Tags.OrderBy(static t => t.Key, StringComparer.Ordinal))
+        {
+            AppendPart(sb, tag.Key);
+            AppendPart(sb, TagText(tag.Value));
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>Appends <paramref name="text"/> to a series identity, prefixed by its length.</summary>
+    /// <param name="sb">The identity being built.</param>
+    /// <param name="text">The name, key or value text.</param>
+    private static void AppendPart(StringBuilder sb, string text)
+        => sb.Append(text.Length.ToString(CultureInfo.InvariantCulture)).Append(':').Append(text);
+
+    /// <summary>The text of the series of <paramref name="measurement"/>: the instrument name and, when it has tags, the
+    /// tags in braces, as a line of <see cref="ToSnapshotString"/> without the value.</summary>
+    /// <param name="measurement">The measurement.</param>
+    /// <returns>The series text, on one line.</returns>
+    private static string SeriesText(CapturedMeasurement measurement)
+    {
+        var tags = FormatTags(measurement);
+        return tags.Length is 0
+            ? EscapeLineBreaks(measurement.InstrumentName)
+            : string.Concat(EscapeLineBreaks(measurement.InstrumentName), " {", tags, "}");
+    }
+
     /// <summary>Returns whether all values lie within the inclusive range [<paramref name="min"/>, <paramref name="max"/>].</summary>
     /// <param name="min">The inclusive lower bound.</param>
     /// <param name="max">The inclusive upper bound.</param>
@@ -277,11 +354,36 @@ public sealed class MeasurementSet
 
     /// <summary>The text a tag value is compared and rendered by, in the invariant culture. A null value reads as an
     /// empty string, and so does a value whose <see cref="object.ToString"/> returns <see langword="null"/>, which
-    /// <see cref="Convert.ToString(object?, IFormatProvider?)"/> passes through.</summary>
+    /// <see cref="Convert.ToString(object?, IFormatProvider?)"/> passes through. An array or other sequence (a tag value
+    /// such as <c>string[]</c> or <c>long[]</c>) reads as its elements, <c>[a, b]</c>, each element read by the same rules,
+    /// so two arrays of one element type are not one value.</summary>
     /// <param name="value">The tag value.</param>
     /// <returns>The text, never <see langword="null"/>.</returns>
     private static string TagText(object? value)
-        => Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
+        => value switch
+        {
+            string text => text,
+            IEnumerable sequence => SequenceText(sequence),
+            _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty,
+        };
+
+    /// <summary>The text of a sequence tag value: its elements in brackets, separated by a comma and a space.</summary>
+    /// <param name="sequence">The sequence (never a string).</param>
+    /// <returns>The text, for example <c>[a, b]</c>, or <c>[]</c> for an empty sequence.</returns>
+    private static string SequenceText(IEnumerable sequence)
+    {
+        var sb = new StringBuilder("[");
+        var first = true;
+        foreach (var element in sequence)
+        {
+            if (!first)
+                sb.Append(", ");
+            sb.Append(TagText(element));
+            first = false;
+        }
+
+        return sb.Append(']').ToString();
+    }
 
     /// <summary>Writes a backslash as <c>\\</c>, then a carriage return and a line feed as the two characters <c>\r</c> and
     /// <c>\n</c>, so a captured instrument name, tag key or tag value that holds a line break cannot split the one line a

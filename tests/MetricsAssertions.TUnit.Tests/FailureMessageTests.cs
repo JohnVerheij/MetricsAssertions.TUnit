@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TUnit.Assertions.Exceptions;
@@ -178,4 +179,91 @@ internal sealed class FailureMessageTests
                 .IsEqualTo("Expected to have a measurement for missing tagged route=/x\nbut no instrument named missing is bundled" + Dump);
         });
     }
+
+    [Test]
+    public async Task Cardinality_FailureTexts(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        await InvariantAsync(async () =>
+        {
+            using var meter = new Meter("MetricsAssertions.TUnit.Tests.Messages.Cardinality");
+            var counter = meter.CreateCounter<long>("orders.placed");
+            var upDown = meter.CreateUpDownCounter<long>("queue.depth");
+            using var capture = InstrumentCapture.Of(counter, Clock);
+            using var empty = InstrumentCapture.Of(meter.CreateCounter<long>("orders.none"), Clock);
+            using var bundle = MeterCapture.For(meter, Clock).Add<long>("orders.placed").Add<long>("queue.depth");
+            counter.Add(1, new KeyValuePair<string, object?>("tenant", "a"));
+            counter.Add(2, new KeyValuePair<string, object?>("tenant", "b"));
+            counter.Add(3, new KeyValuePair<string, object?>("tenant", "a"));
+            upDown.Add(-2);
+            const string Dump = $"\n  captured:\n    orders.placed = 1 {{tenant=a}} @ {Stamp}\n    orders.placed = 2 {{tenant=b}} @ {Stamp}\n    orders.placed = 3 {{tenant=a}} @ {Stamp}";
+            const string BundleDump = Dump + $"\n    queue.depth = -2 @ {Stamp}";
+            const string Values = "\n  values:\n    \"a\"\n    \"b\"";
+            const string Series = "\n  series:\n    orders.placed {tenant=a}\n    orders.placed {tenant=b}";
+            const string Empty = "\n  captured:\n    (no measurements captured)";
+
+            await Assert.That(await MessageAsync(async () => await Assert.That(capture).HasTagCardinalityAtMost("tenant", 1)))
+                .IsEqualTo("Expected to have at most 1 distinct value(s) of tag tenant\nbut it had 2" + Values + Dump);
+            await Assert.That(await MessageAsync(async () => await Assert.That(capture).HasTagCardinalityAtMost("route", 1)))
+                .IsEqualTo("Expected to have at most 1 distinct value(s) of tag route\nbut no measurement carried the tag" + Dump);
+            await Assert.That(await MessageAsync(async () => await Assert.That(empty).HasTagCardinalityAtMost("tenant", 1)))
+                .IsEqualTo("Expected to have at most 1 distinct value(s) of tag tenant\nbut no measurement carried the tag" + Empty);
+            await Assert.That(await MessageAsync(async () => await Assert.That(capture).HasSeriesCountAtMost(1)))
+                .IsEqualTo("Expected to have at most 1 series\nbut it had 2" + Series + Dump);
+            await Assert.That(await MessageAsync(async () => await Assert.That(empty).HasSeriesCountAtMost(1)))
+                .IsEqualTo("Expected to have at most 1 series\nbut it had no measurements" + Empty);
+
+            await Assert.That(await MessageAsync(async () => await Assert.That(capture.Measurements).HasTagCardinalityAtMost("tenant", 1)))
+                .IsEqualTo("Expected to have at most 1 distinct value(s) of tag tenant\nbut it had 2" + Values + Dump);
+            await Assert.That(await MessageAsync(async () => await Assert.That(capture.Measurements).HasSeriesCountAtMost(1)))
+                .IsEqualTo("Expected to have at most 1 series\nbut it had 2" + Series + Dump);
+
+            await Assert.That(await MessageAsync(async () => await Assert.That(bundle).HasTagCardinalityAtMost("orders.placed", "tenant", 1)))
+                .IsEqualTo("Expected to have at most 1 distinct value(s) of tag tenant for orders.placed\nbut it had 2" + Values + BundleDump);
+            await Assert.That(await MessageAsync(async () => await Assert.That(bundle).HasTagCardinalityAtMost("queue.depth", "tenant", 1)))
+                .IsEqualTo("Expected to have at most 1 distinct value(s) of tag tenant for queue.depth\nbut no measurement carried the tag" + BundleDump);
+            await Assert.That(await MessageAsync(async () => await Assert.That(bundle).HasTagCardinalityAtMost("missing", "tenant", 1)))
+                .IsEqualTo("Expected to have at most 1 distinct value(s) of tag tenant for missing\nbut no instrument named missing is bundled" + BundleDump);
+            await Assert.That(await MessageAsync(async () => await Assert.That(bundle).HasSeriesCountAtMost("orders.placed", 1)))
+                .IsEqualTo("Expected to have at most 1 series for orders.placed\nbut it had 2" + Series + BundleDump);
+            await Assert.That(await MessageAsync(async () => await Assert.That(bundle).HasSeriesCountAtMost("missing", 1)))
+                .IsEqualTo("Expected to have at most 1 series for missing\nbut no instrument named missing is bundled" + BundleDump);
+        });
+    }
+
+    [Test]
+    public async Task Cardinality_ListsQuotedValues_TheFirstTwentyOnly(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        await InvariantAsync(async () =>
+        {
+            var tricky = new MeasurementSet(
+            [
+                Measurement("k", null),
+                Measurement("k", " say \"hi\" "),
+                Measurement("k", "C:\\a\nb"),
+            ]);
+            await Assert.That(await MessageAsync(async () => await Assert.That(tricky).HasTagCardinalityAtMost("k", 1)))
+                .StartsWith("Expected to have at most 1 distinct value(s) of tag k\nbut it had 3\n  values:\n    \"\"\n    \" say \\\"hi\\\" \"\n    \"C:\\\\a\\nb\"\n  captured:\n");
+
+            var set = new MeasurementSet(Enumerable.Range(0, 25).Select(i => Measurement("id", i)));
+            var twenty = new MeasurementSet(set.All.Take(20));
+            var values = string.Concat(Enumerable.Range(0, 20).Select(i => $"\n    \"{i}\""));
+            var series = string.Concat(Enumerable.Range(0, 20).Select(i => $"\n    x {{id={i}}}"));
+
+            await Assert.That(await MessageAsync(async () => await Assert.That(set).HasTagCardinalityAtMost("id", 3)))
+                .StartsWith("Expected to have at most 3 distinct value(s) of tag id\nbut it had 25\n  values:" + values + "\n    ... and 5 more\n  captured:\n    x = 1 {id=0}");
+            await Assert.That(await MessageAsync(async () => await Assert.That(set).HasSeriesCountAtMost(3)))
+                .StartsWith("Expected to have at most 3 series\nbut it had 25\n  series:" + series + "\n    ... and 5 more\n  captured:\n    x = 1 {id=0}");
+            await Assert.That(await MessageAsync(async () => await Assert.That(twenty).HasTagCardinalityAtMost("id", 3)))
+                .StartsWith("Expected to have at most 3 distinct value(s) of tag id\nbut it had 20\n  values:" + values + "\n  captured:\n");
+            var twentyOne = new MeasurementSet(set.All.Take(21));
+            await Assert.That(await MessageAsync(async () => await Assert.That(twentyOne).HasSeriesCountAtMost(3)))
+                .StartsWith("Expected to have at most 3 series\nbut it had 21\n  series:" + series + "\n    ... and 1 more\n  captured:\n");
+        });
+    }
+
+    /// <summary>Builds a measurement of instrument <c>x</c> with the value 1 and one tag, stamped with the fixed instant.</summary>
+    private static CapturedMeasurement Measurement(string key, object? value)
+        => new("x", 1, new Dictionary<string, object?>(StringComparer.Ordinal) { [key] = value }, FixedTimeProvider.Instant);
 }
