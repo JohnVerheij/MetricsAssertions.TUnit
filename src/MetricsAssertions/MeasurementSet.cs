@@ -356,39 +356,52 @@ public sealed class MeasurementSet
     /// empty string, and so does a value whose <see cref="object.ToString"/> returns <see langword="null"/>, which
     /// <see cref="Convert.ToString(object?, IFormatProvider?)"/> passes through. An array or other sequence (a tag value
     /// such as <c>string[]</c> or <c>long[]</c>) reads as its elements, <c>[a, b]</c>, each element read by the same rules,
-    /// so two arrays of one element type are not one value.</summary>
+    /// so two arrays of one element type are not one value. A sequence that contains itself reads as <c>[...]</c> where it
+    /// repeats inside itself.</summary>
     /// <param name="value">The tag value.</param>
     /// <returns>The text, never <see langword="null"/>.</returns>
-    private static string TagText(object? value)
+    private static string TagText(object? value) => TagText(value, enclosing: null);
+
+    /// <summary>The text of a tag value, or of an element of a sequence tag value.</summary>
+    /// <param name="value">The tag value or element.</param>
+    /// <param name="enclosing">The sequences being written around this value, by reference, or <see langword="null"/> at the
+    /// top level.</param>
+    /// <returns>The text, never <see langword="null"/>.</returns>
+    private static string TagText(object? value, HashSet<object>? enclosing)
         => value switch
         {
             string text => text,
-            IEnumerable sequence => SequenceText(sequence),
+            IEnumerable sequence => SequenceText(sequence, enclosing ?? new HashSet<object>(ReferenceEqualityComparer.Instance)),
             _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty,
         };
 
-    /// <summary>The text of a sequence tag value: its elements in brackets, separated by a comma and a space.</summary>
+    /// <summary>The text of a sequence tag value: its elements in brackets, separated by a comma and a space. A sequence
+    /// that is already being written around this one (it contains itself) reads as <c>[...]</c>, so the text is finite.</summary>
     /// <param name="sequence">The sequence (never a string).</param>
+    /// <param name="enclosing">The sequences being written around this one, by reference.</param>
     /// <returns>The text, for example <c>[a, b]</c>, or <c>[]</c> for an empty sequence.</returns>
-    private static string SequenceText(IEnumerable sequence)
+    private static string SequenceText(IEnumerable sequence, HashSet<object> enclosing)
     {
+        if (!enclosing.Add(sequence))
+            return "[...]";
         var sb = new StringBuilder("[");
         var first = true;
         foreach (var element in sequence)
         {
             if (!first)
                 sb.Append(", ");
-            sb.Append(TagText(element));
+            sb.Append(TagText(element, enclosing));
             first = false;
         }
 
+        enclosing.Remove(sequence);
         return sb.Append(']').ToString();
     }
 
     /// <summary>Writes a backslash as <c>\\</c>, then a carriage return and a line feed as the two characters <c>\r</c> and
     /// <c>\n</c>, so a captured instrument name, tag key or tag value that holds a line break cannot split the one line a
     /// measurement is rendered on, and a real line break never reads like a backslash followed by <c>n</c>.</summary>
-    /// <param name="text">The captured text (never <see langword="null"/>: a tag value arrives through <see cref="TagText"/>).</param>
+    /// <param name="text">The captured text (never <see langword="null"/>: a tag value arrives through <see cref="TagText(object?)"/>).</param>
     /// <returns>The text on one line.</returns>
     private static string EscapeLineBreaks(string text)
         => text.Replace("\\", "\\\\", StringComparison.Ordinal)

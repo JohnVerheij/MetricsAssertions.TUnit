@@ -114,6 +114,30 @@ internal sealed class TagCardinalityTests
     }
 
     [Test]
+    public async Task ArrayTagValue_ThatContainsItself_ReadsAsAPlaceholderWhereItRepeats(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var self = new object[2];
+        self[0] = "a";
+        self[1] = self;
+        var deeper = new object[] { new object[] { self } };
+        var twice = new object[] { OneA, OneA };
+        var set = new MeasurementSet(
+        [
+            M("x", ("k", self)),
+            M("x", ("k", deeper)),
+            M("x", ("k", twice)),
+        ]);
+
+        // Only a repeat inside itself is cut; the same array twice side by side is written twice.
+        await Assert.That(set.DistinctTagValues("k")).IsEquivalentTo(
+            ["[a, [...]]", "[[[a, [...]]]]", "[[a], [a]]"],
+            CollectionOrdering.Matching);
+        await Assert.That(set.Tagged("k", self).Count).IsEqualTo(1);
+        await Assert.That(set.ToSnapshotString()).Contains("x 1 {k=[a, [...]]}\n");
+    }
+
+    [Test]
     public async Task DistinctTagValues_NullKey_Throws_AlsoOnAnEmptySet(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();

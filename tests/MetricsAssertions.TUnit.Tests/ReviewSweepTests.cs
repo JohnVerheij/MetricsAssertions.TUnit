@@ -18,8 +18,8 @@ namespace MetricsAssertions.TUnit.Tests;
 [Timeout(30_000)]
 internal sealed class ReviewSweepTests
 {
-    private const int Emissions = 2_000;
     private const int Passes = 50;
+    private const int Burst = 40;
     private const string Prefix = "    orders = ";
 
     /// <summary>Returns the failure message of <paramref name="assertion"/> without TUnit's trailing call-site line.</summary>
@@ -65,33 +65,42 @@ internal sealed class ReviewSweepTests
     }
 
     /// <summary>
-    /// Runs <paramref name="assertion"/> <see cref="Passes"/> times while another thread keeps emitting to
-    /// <paramref name="counter"/>, and counts the failure messages that <paramref name="consistent"/> rejects. The work is
-    /// bounded (passes and emissions), not bound to how fast the emitter runs, so the test takes as long on a loaded machine
-    /// as the passes need.
+    /// Runs <paramref name="assertion"/> <see cref="Passes"/> times while another thread emits to <paramref name="counter"/>,
+    /// and counts the failure messages that <paramref name="consistent"/> rejects. Each pass releases one burst of
+    /// <see cref="Burst"/> emissions and starts the assertion once the burst has begun, so the rest of the burst runs while
+    /// the assertion reads the capture. The work is bounded (passes and bursts), not bound to how fast the emitter runs, so
+    /// the test takes as long on a loaded machine as the passes need.
     /// </summary>
     private static async Task AssertConsistentWhileEmittingAsync(Counter<long> counter, Func<Task> assertion, Func<string, bool> consistent)
     {
-        using var started = new ManualResetEventSlim();
+        using var go = new SemaphoreSlim(0);
+        using var emitting = new SemaphoreSlim(0);
         var stop = 0;
         var emitter = new Thread(() =>
         {
-            for (var i = 0; i < Emissions && Volatile.Read(ref stop) == 0; i++)
+            var value = 0L;
+            for (var pass = 0; pass < Passes; pass++)
             {
-                counter.Add(i + 1);
-                started.Set();
-                Thread.Yield();
+                go.Wait();
+                if (Volatile.Read(ref stop) != 0)
+                    return;
+                for (var i = 0; i < Burst; i++)
+                {
+                    counter.Add(++value);
+                    if (i is 0)
+                        emitting.Release();
+                    Thread.Yield();
+                }
             }
-
-            started.Set();
         });
         emitter.Start();
         try
         {
-            started.Wait();
             var inconsistent = new List<string>();
             for (var pass = 0; pass < Passes; pass++)
             {
+                go.Release();
+                await emitting.WaitAsync();
                 var message = await MessageAsync(assertion);
                 if (!consistent(message))
                     inconsistent.Add(message.Length > 300 ? message[..300] : message);
@@ -102,6 +111,7 @@ internal sealed class ReviewSweepTests
         finally
         {
             Volatile.Write(ref stop, 1);
+            go.Release(Passes);
             emitter.Join();
         }
     }

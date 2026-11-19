@@ -95,8 +95,9 @@ internal sealed class HttpClientMetricsTests
         using var r2 = await second.GetAsync(new Uri($"http://127.0.0.1:{port}/"), ct);
         await server;
 
-        // A listener started now is told of every instrument already published: one per handler, all on one meter.
-        var instruments = new System.Collections.Generic.List<System.Diagnostics.Metrics.Instrument>();
+        // A listener started now is told of every instrument already published: one per handler, all on one meter. A test
+        // running in parallel can publish one on another thread while Start() reports the others, hence a concurrent bag.
+        var instruments = new System.Collections.Concurrent.ConcurrentBag<System.Diagnostics.Metrics.Instrument>();
         using (var meterListener = new System.Diagnostics.Metrics.MeterListener())
         {
             meterListener.InstrumentPublished = (instrument, _) =>
