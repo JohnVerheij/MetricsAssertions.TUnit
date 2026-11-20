@@ -24,7 +24,7 @@ For larger ideas (new entry points, breaking changes, cross-cutting refactors), 
 
 ## Code conventions
 
-- **Language version:** C# 14 (`<LangVersion>14.0</LangVersion>`). Use modern C# (collection expressions, primary constructors where appropriate, etc.).
+- **Language version:** C# 15 (`<LangVersion>15.0</LangVersion>`). Use modern C# (collection expressions, primary constructors where appropriate, etc.).
 - **Nullability:** enabled. All public APIs annotate nullability correctly.
 - **XML documentation:** required on every public type, member, and parameter.
 - **Argument validation:** public methods that take reference-type arguments use `ArgumentNullException.ThrowIfNull(...)` at the top of the body. Methods taking numeric arguments validate ranges with `ArgumentOutOfRangeException.ThrowIfNegative(...)` (or similar).
@@ -37,8 +37,9 @@ For larger ideas (new entry points, breaking changes, cross-cutting refactors), 
 
 Test projects (under `tests/`):
 
-- `MetricsAssertions.TUnit.Tests/`: the main TUnit-adapter test suite, exercising the `MatchesSnapshot()` / `MatchesSnapshotFile()` chain, the `WithName` / `AtPath` / `WithOptions` / `WithScrubber` methods, and the `Scrubbers` / `SnapshotScrubberState` / `SnapshotFileResolver` framework-agnostic core via TUnit `[Test]` cases.
-- `MetricsAssertions.TUnit.SnapshotTests/`: self-test that pins the public API surface of both packages by piping `PublicApiGenerator` output through `MatchesSnapshot()` against checked-in `.expected.txt` baselines. Dogfooding: the snapshot tool tests itself on its own surface.
+- `MetricsAssertions.Tests/`: the framework-agnostic core suite: the captures, `MeasurementSet` queries, flow-scoped capture and `MeterInspector`. It does not reference the adapter (`MetricsAssertions.TUnit`), so the core is tested on its own.
+- `MetricsAssertions.TUnit.Tests/`: the TUnit adapter suite: every `Assert.That(...).Has*` assertion, the full text of its failure message, and real-use cases (captures built in hooks, retried tests, tests running in parallel).
+- `MetricsAssertions.TUnit.SnapshotTests/`: pins the public API surface of both packages by piping `PublicApiGenerator` output through `SnapshotAssertions.TUnit`'s `MatchesSnapshot()` against checked-in `.expected.txt` baselines.
 - `MetricsAssertions.TUnit.SmokeTest/`: minimal one-test consumer-install verification project, used to validate that the `.nupkg` packs and resolves correctly against a fresh consumer csproj.
 
 General test rules:

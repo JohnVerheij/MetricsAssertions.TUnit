@@ -2,15 +2,43 @@
 <!-- https://learn.microsoft.com/dotnet/fundamentals/package-validation/diagnostic-ids -->
 <Suppressions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.MeasurementSet.DistinctSeries</Target>
+    <Left>lib/net10.0/MetricsAssertions.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.MeasurementSet.DistinctTagValues(System.String)</Target>
+    <Left>lib/net10.0/MetricsAssertions.dll</Left>
+    <Right>lib/net10.0/MetricsAssertions.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.MeasurementSet.DistinctSeries</Target>
+    <Left>lib/net11.0/MetricsAssertions.dll</Left>
+    <Right>lib/net11.0/MetricsAssertions.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:MetricsAssertions.MeasurementSet.DistinctTagValues(System.String)</Target>
+    <Left>lib/net11.0/MetricsAssertions.dll</Left>
+    <Right>lib/net11.0/MetricsAssertions.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
     <DiagnosticId>CP0003</DiagnosticId>
-    <Target>MetricsAssertions, Version=0.6.0.0, Culture=neutral, PublicKeyToken=null</Target>
+    <Target>MetricsAssertions, Version=0.6.1.0, Culture=neutral, PublicKeyToken=null</Target>
     <Left>lib/net10.0/MetricsAssertions.dll</Left>
     <Right>lib/net10.0/MetricsAssertions.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0003</DiagnosticId>
-    <Target>MetricsAssertions, Version=0.6.0.0, Culture=neutral, PublicKeyToken=null</Target>
+    <Target>MetricsAssertions, Version=0.6.1.0, Culture=neutral, PublicKeyToken=null</Target>
     <Left>lib/net11.0/MetricsAssertions.dll</Left>
     <Right>lib/net11.0/MetricsAssertions.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>

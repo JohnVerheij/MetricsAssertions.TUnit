@@ -15,6 +15,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-20: tag and series cardinality budgets
+
+### Added
+
+- **`HasTagCardinalityAtMost(tagKey, max)`** on an `InstrumentCapture` and a `MeasurementSet`, and **`HasTagCardinalityAtMost(instrumentName, tagKey, max)`** on a `MeterCapture`, assert that a tag has at most `max` distinct values: a budget that fails when a tag is fed from an unbounded source, such as an order id or a raw URL path in place of a route template. Measurements without the tag do not count, and values compare as invariant text, as `Tagged` compares them. The assertion fails when no measurement carries the tag, so a misspelled key or a capture that recorded nothing does not pass, and the failure lists the values (the first 20) above the captured measurements. A `max` below 1 throws `ArgumentOutOfRangeException`.
+- **`HasSeriesCountAtMost(max)`** on an `InstrumentCapture` and a `MeasurementSet`, and **`HasSeriesCountAtMost(instrumentName, max)`** on a `MeterCapture`, assert that the measurements form at most `max` series. A series is a distinct combination of an instrument name and a tag set, what a metrics backend stores as one time series. The assertion fails when there are no measurements, and the failure lists the series (the first 20). A `max` below 1 throws `ArgumentOutOfRangeException`.
+- **`MeasurementSet.DistinctTagValues(key)`** returns the distinct values of a tag as invariant text, in the order they were first captured.
+- **`MeasurementSet.DistinctSeries()`** returns one entry per series, in the order each was first captured, written as a line of `ToSnapshotString()` without the value (`orders.placed {region=eu,tenant=a}`).
+
+### Changed
+
+- **README: the .NET 11 sample of `http.client.open_connections`.** On .NET 11 every `HttpClient` handler publishes its own `http.client.open_connections` and `http.client.active_requests` instruments on the one `System.Net.Http` meter, and a capture by name attaches to the first of them in the process, which in a test suite can be another test's client. The sample now gives the client a meter factory of the test's own and captures with that factory as the meter scope.
+- **README: a comparison with `MetricCollector<T>`**, the capture Microsoft Learn recommends for metric tests: the same test written both ways, what the package adds, and when to stay with `MetricCollector<T>`. The README now also states that a flow-scoped capture uses its own `MeterListener` instead of `MetricCollector<T>`.
+
+### Fixed
+
+- **A tag whose value is an array** (`string[]`, `long[]`, or another sequence) read as its type name, `System.String[]`, so `Tagged(key, value)` and `HasTaggedMeasurement` matched any array of the same element type, and the failure dump, `Describe()` and `ToSnapshotString()` did not show the elements. Such a value now reads as its elements, `[a, b]`, each element by the rules of a single value, everywhere tag values are compared or written, including the new cardinality reads. A snapshot baseline with an array tag value has to be accepted again.
+
 ## [0.6.1] - 2026-11-17: ignored measurements of other flows in every failure message
 
 ### Changed
@@ -151,7 +169,8 @@ capture and a first assertion. The full surface lands in 0.1.0.
 - **`MetricsAssertions.TUnit` (adapter):** `Assert.That(capture).HasMeasurementCount(n)`, generated
   via TUnit's `[GenerateAssertion]` source generator.
 
-[unreleased]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.6.1...HEAD
+[unreleased]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/JohnVerheij/MetricsAssertions.TUnit/compare/v0.4.0...v0.5.0

@@ -16,15 +16,15 @@ Fluent `Assert.That(...).Has*` assertions over three receivers:
 
 | Receiver | Assertions |
 |---|---|
-| `InstrumentCapture` | counter / up-down-counter totals, measurement count, emptiness, last value (exact or within tolerance), tag presence |
-| `MeasurementSet` | totals, counts, histogram sum / average / range, exact, tolerant, and order-insensitive samples, tag-consistency |
-| `MeterCapture` | per-instrument totals, counts, and tag presence by name |
+| `InstrumentCapture` | counter / up-down-counter totals, measurement count, emptiness, last value (exact or within tolerance), tag presence, tag and series cardinality |
+| `MeasurementSet` | totals, counts, histogram sum / average / range, exact, tolerant, and order-insensitive samples, tag-consistency, tag and series cardinality |
+| `MeterCapture` | per-instrument totals, counts, tag presence, and tag and series cardinality by name |
 
 Every assertion, by receiver:
 
-- **`InstrumentCapture`** (`Assert.That(capture)`): `HasCounterTotal(n)`, `HasCounterTotalAtLeast(n)`, `HasUpDownCounterValue(n)`, `HasMeasurementCount(n)`, `HasNoMeasurements()`, `HasLastValue(v)`, `HasLastValue(v, tolerance)`, `HasTaggedMeasurement(key, value)`.
-- **`MeasurementSet`** (`Assert.That(capture.Measurements)`, `capture.Tagged(...)`, `capture.Since(...)`): `HasCounterTotal(n)`, `HasCounterTotalAtLeast(n)`, `HasMeasurementCount(n)`, `HasNoMeasurements()`, `HasSampleSum(v, tolerance)`, `HasSampleAverage(v, tolerance)`, `HasAllSamplesInRange(min, max)`, `HasSamples(...)`, `HasSamples(expected, tolerance)`, `HasSamplesInAnyOrder(...)`, `HasSamplesInAnyOrder(expected, tolerance)`, `HasEveryMeasurementTagged(key)`, `HasTaggedMeasurement(key, value)`.
-- **`MeterCapture`** (`Assert.That(meter)`): `HasCounterTotal(name, n)`, `HasUpDownCounterValue(name, n)`, `HasMeasurementCount(name, n)`, `HasTaggedMeasurement(name, key, value)`.
+- **`InstrumentCapture`** (`Assert.That(capture)`): `HasCounterTotal(n)`, `HasCounterTotalAtLeast(n)`, `HasUpDownCounterValue(n)`, `HasMeasurementCount(n)`, `HasNoMeasurements()`, `HasLastValue(v)`, `HasLastValue(v, tolerance)`, `HasTaggedMeasurement(key, value)`, `HasTagCardinalityAtMost(key, max)`, `HasSeriesCountAtMost(max)`.
+- **`MeasurementSet`** (`Assert.That(capture.Measurements)`, `capture.Tagged(...)`, `capture.Since(...)`): `HasCounterTotal(n)`, `HasCounterTotalAtLeast(n)`, `HasMeasurementCount(n)`, `HasNoMeasurements()`, `HasSampleSum(v, tolerance)`, `HasSampleAverage(v, tolerance)`, `HasAllSamplesInRange(min, max)`, `HasSamples(...)`, `HasSamples(expected, tolerance)`, `HasSamplesInAnyOrder(...)`, `HasSamplesInAnyOrder(expected, tolerance)`, `HasEveryMeasurementTagged(key)`, `HasTaggedMeasurement(key, value)`, `HasTagCardinalityAtMost(key, max)`, `HasSeriesCountAtMost(max)`.
+- **`MeterCapture`** (`Assert.That(meter)`): `HasCounterTotal(name, n)`, `HasUpDownCounterValue(name, n)`, `HasMeasurementCount(name, n)`, `HasTaggedMeasurement(name, key, value)`, `HasTagCardinalityAtMost(name, key, max)`, `HasSeriesCountAtMost(name, max)`.
 
 The framework-agnostic core (`MetricsAssertions`) ships the `InstrumentCapture` / `MeterCapture` capture types, the queryable `MeasurementSet`, `MeterInspector`, and the `CapturedMeasurement` record (instrument name, value projected to `double`, tags, timestamp). The by-name captures (`InstrumentCapture.OfName`, `MeterCapture.For`) take an optional meter scope (v0.2.0+) so a meter created by an `IMeterFactory` (the ASP.NET Core DI metrics path) can be captured. Since v0.4.0, `MeterCapture.For` also takes the clock once for every instrument, and `MeterCapture.For(meter)` / `InstrumentCapture.OfName(meter, name)` capture one `Meter` instance only, so a same-named meter of a test running in parallel is not captured. `MeterCapture.For(name).InCurrentFlow()` records only the measurements emitted in the async flow of the test, which isolates a test from others that emit to the same static meter.
 
